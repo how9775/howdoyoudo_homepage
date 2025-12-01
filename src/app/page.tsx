@@ -9,9 +9,7 @@ export default function Home() {
       {/* Hero Section */}
       <HeroSection />
       <section className="relative py-10 bg-white">
-
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
-        
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" /> 
         {/* Animated Divider */}
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center animate-on-scroll">
@@ -25,7 +23,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-      
       <ImageGallery />
     </div>
   )
