@@ -23,6 +23,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      
       <ImageGallery />
     </div>
   )
