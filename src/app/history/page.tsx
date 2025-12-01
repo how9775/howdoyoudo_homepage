@@ -25,7 +25,7 @@ interface HistoryData {
 
 async function getHistoryData(): Promise<HistoryData> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/history`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/history`, {
       cache: 'no-store'
     });
     

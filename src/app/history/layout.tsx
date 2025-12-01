@@ -3,7 +3,7 @@ import YearBar from "./_components/YearBar"
 
 async function getHistoryYears() {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/history`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/history`, {
             cache: 'no-store'
         })
         
