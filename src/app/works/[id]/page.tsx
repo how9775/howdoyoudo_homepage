@@ -30,12 +30,9 @@ async function getWorkDetail(id: string): Promise<WorkDetailResponse | null> {
   }
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string };
-}): Promise<Metadata> {
-  const data = await getWorkDetail(params.id);
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const {id } = await params;
+  const data = await getWorkDetail(id);
 
   if (!data) {
     return {
@@ -49,12 +46,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function WorkDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const data = await getWorkDetail(params.id);
+export default async function WorkDetailPage({ params }: { params: { id: string } }) {
+  const id = await params.id;
+  const data = await getWorkDetail(id);
 
   if (!data) {
     notFound();

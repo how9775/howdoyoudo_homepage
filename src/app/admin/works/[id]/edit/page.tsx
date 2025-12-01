@@ -116,8 +116,7 @@ export default function EditWorkPage() {
               title: work.title,
               categoryId: work.category_id,
               description: work.description,
-              eventDate: work.event_date.split('T')[0],
-              isActive: Boolean(work.is_active),
+              eventDate: work.event_date.split('T')[0]
             }}
             existingThumbnail={work.thumbnail_image}
             existingImages={existingImages}

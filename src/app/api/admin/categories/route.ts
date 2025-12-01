@@ -127,7 +127,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error('카테고리 삭제 오류:', error);
     return NextResponse.json(
-      { success: false, error: '카테고리 삭제에 실패했습니다.' },
+      { success: false, error: '카테고리 삭제에 실패했습니다. 카테고리를 사용하는 게시글을 삭제하고 시도해주세요.' },
       { status: 500 }
     );
   }

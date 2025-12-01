@@ -18,7 +18,6 @@ interface WorkFormData {
   categoryId: number | null;
   description: string;
   eventDate: string;
-  isActive: boolean;
 }
 
 interface WorkFormProps {
@@ -42,7 +41,6 @@ export default function WorkForm({
     categoryId: null,
     description: '',
     eventDate: new Date().toISOString().split('T')[0],
-    isActive: true,
     ...initialData,
   });
 
@@ -60,7 +58,6 @@ export default function WorkForm({
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [error, setError] = useState('');
 
-  // Cleanup: 컴포넌트 언마운트 시 preview URL 정리
   useEffect(() => {
     return () => {
       if (thumbnailFile) {
@@ -70,12 +67,10 @@ export default function WorkForm({
     };
   }, [thumbnailFile, newContentImages]);
 
-  // 썸네일 선택
   const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 파일 타입 검증
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       alert('지원하지 않는 파일 형식입니다.');
@@ -87,7 +82,6 @@ export default function WorkForm({
       return;
     }
 
-    // 기존 미리보기 URL 정리
     if (thumbnailFile) {
       URL.revokeObjectURL(thumbnailFile.preview);
     }
@@ -96,12 +90,11 @@ export default function WorkForm({
       file,
       preview: URL.createObjectURL(file),
     });
-    setKeepExistingThumbnail(null); // 새 썸네일 선택 시 기존 썸네일 제거
+    setKeepExistingThumbnail(null);
 
     e.target.value = '';
   };
 
-  // 썸네일 삭제
   const handleRemoveThumbnail = () => {
     if (thumbnailFile) {
       URL.revokeObjectURL(thumbnailFile.preview);
@@ -110,12 +103,10 @@ export default function WorkForm({
     setKeepExistingThumbnail(null);
   };
 
-  // 기존 콘텐츠 이미지 삭제
   const handleRemoveExistingImage = (url: string) => {
     setKeepExistingImages((prev) => prev.filter((img) => img !== url));
   };
 
-  // 이미지 업로드 함수
   const uploadImage = async (imageFile: ImageFile): Promise<string> => {
     const formData = new FormData();
     formData.append('file', imageFile.file);
@@ -140,7 +131,6 @@ export default function WorkForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
     if (!formData.title.trim()) {
       setError('제목을 입력해주세요.');
       return;
@@ -150,7 +140,6 @@ export default function WorkForm({
       return;
     }
 
-    // 썸네일 체크 (기존 or 새로운)
     const hasThumbnail = keepExistingThumbnail || thumbnailFile;
     if (!hasThumbnail) {
       setError('썸네일 이미지를 선택해주세요.');
@@ -170,13 +159,11 @@ export default function WorkForm({
       let thumbnailUrl = keepExistingThumbnail || '';
       const newImageUrls: string[] = [];
 
-      // 썸네일 업로드 (새로 선택한 경우)
       if (thumbnailFile) {
         setUploadProgress('썸네일 업로드 중...');
         thumbnailUrl = await uploadImage(thumbnailFile);
       }
 
-      // 콘텐츠 이미지 업로드 (새로 추가한 경우)
       if (newContentImages.length > 0) {
         for (let i = 0; i < newContentImages.length; i++) {
           setUploadProgress(
@@ -189,7 +176,6 @@ export default function WorkForm({
 
       setUploadProgress('게시글 저장 중...');
 
-      // 최종 콘텐츠 이미지 배열: 기존 이미지 + 새 이미지
       const finalContentImages = [...keepExistingImages, ...newImageUrls];
 
       const url =
@@ -203,7 +189,7 @@ export default function WorkForm({
         eventDate: formData.eventDate,
         thumbnailImage: thumbnailUrl,
         contentImages: finalContentImages,
-        isActive: formData.isActive,
+        isActive: true, // 항상 true로 설정
       };
 
       const response = await fetch(url, {
@@ -238,14 +224,12 @@ export default function WorkForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Error Message */}
       {error && (
         <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
           <p className="text-red-800 text-sm font-medium">{error}</p>
         </div>
       )}
 
-      {/* Upload Progress */}
       {uploadProgress && (
         <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
           <div className="flex items-center space-x-3">
@@ -255,7 +239,6 @@ export default function WorkForm({
         </div>
       )}
 
-      {/* Title */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">제목 *</label>
         <input
@@ -268,13 +251,11 @@ export default function WorkForm({
         />
       </div>
 
-      {/* Category */}
       <CategoryManager
         selectedCategoryId={formData.categoryId}
         onCategoryChange={(categoryId) => setFormData({ ...formData, categoryId })}
       />
 
-      {/* Event Date */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">행사 일자 *</label>
         <input
@@ -286,7 +267,6 @@ export default function WorkForm({
         />
       </div>
 
-      {/* Description */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">설명</label>
         <textarea
@@ -299,11 +279,9 @@ export default function WorkForm({
         />
       </div>
 
-      {/* Thumbnail */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">썸네일 이미지 *</label>
         <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4">
-          {/* 현재 썸네일 미리보기 */}
           {(thumbnailFile || keepExistingThumbnail) && (
             <div className="mb-4">
               <div className="relative w-full max-w-sm aspect-[4/5] rounded-lg overflow-hidden bg-gray-100">
@@ -314,7 +292,6 @@ export default function WorkForm({
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 400px"
                 />
-                {/* 삭제 버튼 */}
                 <button
                   type="button"
                   onClick={handleRemoveThumbnail}
@@ -327,7 +304,6 @@ export default function WorkForm({
             </div>
           )}
 
-          {/* 썸네일 선택 버튼 */}
           <label
             htmlFor="thumbnail-upload"
             className="flex items-center justify-center space-x-2 px-4 py-3 border-2 border-dashed border-blue-300 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
@@ -350,13 +326,11 @@ export default function WorkForm({
         </div>
       </div>
 
-      {/* Content Images */}
       <div className="space-y-4">
         <label className="block text-sm font-medium text-gray-700">
           콘텐츠 이미지 ({totalContentImages}개)
         </label>
 
-        {/* 기존 이미지 */}
         {mode === 'edit' && keepExistingImages.length > 0 && (
           <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4">
             <h4 className="text-sm font-medium text-gray-700 mb-3">
@@ -376,12 +350,10 @@ export default function WorkForm({
                     sizes="(max-width: 768px) 50vw, 25vw"
                   />
 
-                  {/* 순서 표시 */}
                   <div className="absolute top-2 right-2 w-6 h-6 bg-black/70 text-white text-xs rounded-full flex items-center justify-center font-medium">
                     {index + 1}
                   </div>
 
-                  {/* 삭제 버튼 */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors">
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
@@ -400,7 +372,6 @@ export default function WorkForm({
           </div>
         )}
 
-        {/* 새 이미지 업로드 */}
         <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4">
           <h4 className="text-sm font-medium text-gray-700 mb-3">
             새 이미지 추가 ({newContentImages.length}개)
@@ -415,22 +386,8 @@ export default function WorkForm({
         </div>
       </div>
 
-      {/* Is Active */}
-      <div className="flex items-center space-x-3">
-        <input
-          type="checkbox"
-          id="isActive"
-          checked={formData.isActive}
-          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-          disabled={saving}
-        />
-        <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
-          게시글 활성화
-        </label>
-      </div>
+      {/* isActive 체크박스 제거됨 */}
 
-      {/* Action Buttons */}
       <div className="flex items-center space-x-4 pt-6 border-t-2 border-gray-200">
         <button
           type="submit"

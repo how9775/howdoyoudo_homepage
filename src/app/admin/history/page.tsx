@@ -1,3 +1,4 @@
+// src/app/admin/history/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,8 +10,6 @@ interface HistoryItem {
     year: string;
     date: string;
     description: string;
-    display_order: number;
-    active: number;
 }
 
 export default function AdminHistoryPage() {
@@ -18,6 +17,7 @@ export default function AdminHistoryPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [newRow, setNewRow] = useState<Partial<HistoryItem> | null>(null);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
     useEffect(() => {
         fetchHistories();
@@ -37,7 +37,56 @@ export default function AdminHistoryPage() {
         }
     };
 
-    // Date에서 Year 자동 추출
+    // 전체 선택/해제
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedIds(histories.map(h => h.id));
+        } else {
+            setSelectedIds([]);
+        }
+    };
+
+    // 개별 선택/해제
+    const handleSelectOne = (id: number, checked: boolean) => {
+        if (checked) {
+            setSelectedIds(prev => [...prev, id]);
+        } else {
+            setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
+        }
+    };
+
+    // 일괄 삭제
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) {
+            alert('삭제할 항목을 선택해주세요.');
+            return;
+        }
+
+        if (!confirm(`선택한 ${selectedIds.length}개 항목을 삭제하시겠습니까?`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/admin/history', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: selectedIds }),
+            });
+
+            if (res.ok) {
+                await fetchHistories();
+                setSelectedIds([]);
+                const data = await res.json();
+                alert(data.message);
+            } else {
+                alert('삭제에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Failed to delete histories:', error);
+            alert('삭제 중 오류가 발생했습니다.');
+        }
+    };
+
     const extractYearFromDate = (date: string): string => {
         const match = date.match(/^(\d{4})/);
         return match ? match[1] : new Date().getFullYear().toString();
@@ -145,7 +194,6 @@ export default function AdminHistoryPage() {
         setNewRow((prev) => (prev ? { ...prev, [field]: value } : null));
     };
 
-    // 엔터키로 저장
     const handleKeyPress = (e: React.KeyboardEvent, isDescription: boolean = false) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -163,6 +211,8 @@ export default function AdminHistoryPage() {
         );
     }
 
+    const isAllSelected = histories.length > 0 && selectedIds.length === histories.length;
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
@@ -179,14 +229,25 @@ export default function AdminHistoryPage() {
                             <h1 className="text-2xl font-bold text-gray-900">History 관리</h1>
                         </div>
 
-                        <button
-                            onClick={handleAdd}
-                            disabled={newRow !== null}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                        >
-                            <Plus size={20} />
-                            추가
-                        </button>
+                        <div className="flex items-center gap-3">
+                            {selectedIds.length > 0 && (
+                                <button
+                                    onClick={handleBulkDelete}
+                                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                                >
+                                    <Trash2 size={20} />
+                                    선택 삭제 ({selectedIds.length})
+                                </button>
+                            )}
+                            <button
+                                onClick={handleAdd}
+                                disabled={newRow !== null}
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <Plus size={20} />
+                                추가
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -198,6 +259,14 @@ export default function AdminHistoryPage() {
                         <table className="w-full">
                             <thead className="bg-gray-100 border-b">
                                 <tr>
+                                    <th className="px-4 py-3 text-left w-12">
+                                        <input
+                                            type="checkbox"
+                                            checked={isAllSelected}
+                                            onChange={(e) => handleSelectAll(e.target.checked)}
+                                            className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
+                                        />
+                                    </th>
                                     <th className="px-4 py-3 text-left text-sm font-semibold w-20">ID</th>
                                     <th className="px-4 py-3 text-left text-sm font-semibold w-32">Date</th>
                                     <th className="px-4 py-3 text-left text-sm font-semibold">Description</th>
@@ -207,6 +276,7 @@ export default function AdminHistoryPage() {
                             <tbody>
                                 {newRow && (
                                     <tr className="border-b bg-blue-50">
+                                        <td className="px-4 py-2"></td>
                                         <td className="px-4 py-2 text-sm text-gray-500">NEW</td>
                                         <td className="px-4 py-2">
                                             <input
@@ -250,7 +320,15 @@ export default function AdminHistoryPage() {
                                     </tr>
                                 )}
                                 {histories.map((item) => (
-                                    <tr key={item.id} className="border-b hover:bg-gray-50">
+                                    <tr key={item.id} className="border-b hover:bg-gray-50 group">
+                                        <td className="px-4 py-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds.includes(item.id)}
+                                                onChange={(e) => handleSelectOne(item.id, e.target.checked)}
+                                                className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
+                                            />
+                                        </td>
                                         <td className="px-4 py-2 text-sm text-gray-500">{item.id}</td>
                                         <td className="px-4 py-2">
                                             {editingId === item.id ? (
@@ -298,7 +376,7 @@ export default function AdminHistoryPage() {
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <div className="flex gap-2">
+                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
                                                         onClick={() => handleEdit(item.id)}
                                                         className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded"

@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+
+// R2 클라이언트 초기화
+const r2Client = new S3Client({
+  region: 'auto',
+  endpoint: process.env.R2_ENDPOINT, // https://<account-id>.r2.cloudflarestorage.com
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+  },
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,42 +55,36 @@ export async function POST(request: NextRequest) {
     const ext = file.name.split('.').pop();
     const filename = `${timestamp}-${randomString}.${ext}`;
 
-    // 외부 서버 업로드 URL
-    const uploadServerUrl = process.env.UPLOAD_SERVER_URL || 'http://subdevpi.duckdns.org:3000';
-    const uploadPath = 'howdoyoudo/works'; // 업로드할 경로
-    
-    // FormData 생성 (외부 서버로 전송)
-    const uploadFormData = new FormData();
-    uploadFormData.append('file', file);
-    uploadFormData.append('filename', filename);
+    // R2 경로 설정
+    const r2Path = `howdoyoudo/works/${filename}`;
 
-    // 외부 서버로 업로드
-    const uploadResponse = await fetch(`${uploadServerUrl}/upload/${uploadPath}`, {
-      method: 'POST',
-      body: uploadFormData,
+    // 파일을 Buffer로 변환
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    // R2에 업로드
+    const uploadCommand = new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME || '',
+      Key: r2Path,
+      Body: buffer,
+      ContentType: file.type,
     });
 
-    if (!uploadResponse.ok) {
-      const errorText = await uploadResponse.text();
-      console.error('외부 서버 업로드 실패:', errorText);
-      return NextResponse.json(
-        { success: false, error: '외부 서버로의 업로드에 실패했습니다.' },
-        { status: 500 }
-      );
-    }
+    await r2Client.send(uploadCommand);
 
-    const uploadResult = await uploadResponse.json();
+    // 공개 URL 생성 (R2 Public Bucket 또는 Custom Domain 사용)
+    // 옵션 1: R2 Public Bucket URL
+    // const fileUrl = `https://pub-<bucket-id>.r2.dev/${r2Path}`;
     
-    // 업로드 성공 시 파일 URL 생성
-    // 외부 서버의 응답 형식: { success: true, message: '...', file: { ... } }
-    const fileUrl = `${uploadServerUrl}/file/${uploadPath}/${filename}`;
+    // 옵션 2: Custom Domain 사용 (권장)
+    const publicDomain = process.env.R2_PUBLIC_DOMAIN || ''; // 예: https://cdn.yourdomain.com
+    const fileUrl = `${publicDomain}/${r2Path}`;
 
     return NextResponse.json({
       success: true,
       data: {
         url: fileUrl,
         filename: filename,
-        uploadResult: uploadResult, // 디버깅용
+        path: r2Path,
       },
     });
   } catch (error) {

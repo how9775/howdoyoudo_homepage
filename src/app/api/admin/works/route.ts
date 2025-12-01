@@ -6,58 +6,99 @@ import { WorkItemDB } from '@/types/works';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
     const categoryId = searchParams.get("categoryId");
-    const isActive = searchParams.get("isActive");
 
     const offset = (page - 1) * limit;
 
-    let queryBuilder = supabaseAdmin
-      .from('works')
-      .select('*, work_categories(display_name)')
-      .order('created_at', { ascending: false })
+    // 쿼리 빌더
+    let worksQuery = supabaseAdmin
+      .from("works")
+      .select(`
+        id,
+        title,
+        category_id,
+        description,
+        event_date,
+        thumbnail_image,
+        content_images,
+        view_count,
+        created_at,
+        updated_at,
+        work_categories (
+          display_name
+        )
+      `, { count: 'exact' });
+
+    // 카테고리 필터
+    if (categoryId && categoryId !== "all") {
+      worksQuery = worksQuery.eq("category_id", parseInt(categoryId));
+    }
+
+    // 정렬 및 페이지네이션
+    worksQuery = worksQuery
+      .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (categoryId && categoryId !== 'all') {
-      queryBuilder = queryBuilder.eq('category_id', parseInt(categoryId));
+    const { data: worksData, error: worksError, count: totalCount } = await worksQuery;
+
+    if (worksError) {
+      console.error("Supabase works query error:", worksError);
+      return NextResponse.json(
+        { success: false, error: "Failed to load works data" },
+        { status: 500 }
+      );
     }
 
-    if (isActive === 'true') {
-      queryBuilder = queryBuilder.eq('is_active', true);
-    } else if (isActive === 'false') {
-      queryBuilder = queryBuilder.eq('is_active', false);
-    }
+    // Categories 조회
+    const { data: categoriesData } = await supabaseAdmin
+      .from("work_categories")
+      .select("*")
+      .eq("is_active", true)
+      .order("id", { ascending: true });
 
-    const { data: works, error } = await queryBuilder;
-    if (error) throw error;
+    // 데이터 변환
+    const transformedWorks = (worksData || []).map((work: any) => {
+      let contentImages: string[] = [];
+      if (typeof work.content_images === "string") {
+        try {
+          contentImages = JSON.parse(work.content_images);
+        } catch {
+          contentImages = [];
+        }
+      } else if (Array.isArray(work.content_images)) {
+        contentImages = work.content_images;
+      }
 
-    // 전체 카운트 조회
-    let countBuilder = supabaseAdmin.from('works').select('*', { count: 'exact' });
-    if (categoryId && categoryId !== 'all') countBuilder = countBuilder.eq('category_id', parseInt(categoryId));
-    if (isActive === 'true') countBuilder = countBuilder.eq('is_active', true);
-    if (isActive === 'false') countBuilder = countBuilder.eq('is_active', false);
-
-    const { count: totalCount } = await countBuilder;
-    
-    // 카테고리 목록 조회
-    const { data: categories, error: catError } = await supabaseAdmin
-      .from('work_categories')
-      .select('*')
-      .order('id', { ascending: true });
-    if (catError) throw catError;
+      return {
+        id: work.id,
+        title: work.title,
+        categoryId: work.category_id,
+        categoryDisplayName: work.work_categories?.display_name ?? "",
+        description: work.description,
+        eventDate: work.event_date,
+        thumbnailImage: work.thumbnail_image,
+        contentImages,
+        viewCount: work.view_count,
+        createdAt: work.created_at,
+        updatedAt: work.updated_at,
+      };
+    });
 
     return NextResponse.json({
       success: true,
-      works: works || [],
+      works: transformedWorks,
       totalCount: totalCount || 0,
-      categories: categories || [],
+      categories: (categoriesData || []).map(c => ({
+        id: c.id,
+        displayName: c.display_name,
+        isActive: c.is_active,
+      })),
       hasMore: offset + limit < (totalCount || 0),
-      currentPage: page,
     });
-
   } catch (error) {
-    console.error("Error reading admin works data:", error);
+    console.error("Error reading works data:", error);
     return NextResponse.json(
       { success: false, error: "Failed to load works data" },
       { status: 500 }

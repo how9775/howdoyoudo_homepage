@@ -64,6 +64,8 @@ export default function AdminDashboardPage() {
       const response = await fetch('/api/admin/auth/session');
       const data = await response.json();
 
+      console.log(data);
+
       if (data.success) {
         setAdminInfo(data.admin);
       } else {

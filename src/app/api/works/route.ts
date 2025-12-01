@@ -1,7 +1,7 @@
 // src/app/api/works/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { WorkItem, WorksResponse, WorkItemFromDB } from "@/types/works";
+import { supabaseAdmin } from "@/utils/supabase";
+import { WorkItem, WorksResponse } from "@/types/works";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,13 +14,8 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
     const currentYear = new Date().getFullYear();
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    // 쿼리 빌더 시작
-    let worksQuery = supabase
+    // 쿼리 빌더
+    let worksQuery = supabaseAdmin
       .from("works")
       .select(`
         id,
@@ -67,7 +62,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Categories 조회
-    const { data: categoriesData, error: categoriesError } = await supabase
+    const { data: categoriesData, error: categoriesError } = await supabaseAdmin
       .from("work_categories")
       .select("*")
       .eq("is_active", true)
@@ -77,8 +72,8 @@ export async function GET(request: NextRequest) {
       console.error("Supabase categories query error:", categoriesError);
     }
 
-    // 데이터 변환 - unknown을 거쳐서 타입 캐스팅
-    const transformedWorks: WorkItem[] = ((worksData as unknown) as WorkItemFromDB[] || []).map((work) => {
+    // 데이터 변환
+    const transformedWorks: WorkItem[] = (worksData || []).map((work: any) => {
       let contentImages: string[] = [];
 
       if (typeof work.content_images === "string") {

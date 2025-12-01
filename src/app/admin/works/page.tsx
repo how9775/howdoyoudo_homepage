@@ -1,10 +1,9 @@
+// src/app/admin/works/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Eye,
-  EyeOff,
   Edit,
   Trash2,
   Plus,
@@ -19,22 +18,21 @@ import Image from 'next/image';
 interface Work {
   id: number;
   title: string;
-  category_id: number;
-  category_display_name: string;
+  categoryId: number;
+  categoryDisplayName: string;  // 통일된 명명
   description: string;
-  event_date: string;
-  thumbnail_image: string;
-  content_images: string | string[];
-  is_active: boolean;
-  view_count: number;
-  created_at: string;
-  updated_at: string;
+  eventDate: string;
+  thumbnailImage: string;
+  contentImages: string[];
+  viewCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Category {
   id: number;
-  display_name: string;
-  is_active: boolean;
+  displayName: string;
+  isActive: boolean;
 }
 
 export default function AdminWorksPage() {
@@ -43,17 +41,15 @@ export default function AdminWorksPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
 
   const itemsPerPage = 20;
 
   useEffect(() => {
     fetchWorks();
-  }, [selectedCategory, selectedStatus, currentPage]);
+  }, [selectedCategory, currentPage]);
 
   const fetchWorks = async () => {
     try {
@@ -67,10 +63,6 @@ export default function AdminWorksPage() {
         params.append('categoryId', selectedCategory);
       }
 
-      if (selectedStatus !== 'all') {
-        params.append('isActive', selectedStatus);
-      }
-
       const response = await fetch(`/api/admin/works?${params.toString()}`);
       const data = await response.json();
 
@@ -78,38 +70,11 @@ export default function AdminWorksPage() {
         setWorks(data.works);
         setCategories(data.categories);
         setTotalCount(data.totalCount);
-        setHasMore(data.hasMore);
       }
     } catch (error) {
       console.error('Error fetching works:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleToggleActive = async (workId: number, currentStatus: boolean) => {
-    try {
-      const response = await fetch(`/api/admin/works/${workId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          isActive: !currentStatus,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // 작업 목록 새로고침
-        fetchWorks();
-      } else {
-        alert(data.error || '상태 변경에 실패했습니다.');
-      }
-    } catch (error) {
-      console.error('Error toggling work status:', error);
-      alert('상태 변경 중 오류가 발생했습니다.');
     }
   };
 
@@ -127,7 +92,6 @@ export default function AdminWorksPage() {
 
       if (data.success) {
         alert('작업이 성공적으로 삭제되었습니다.');
-        // 즉시 목록 새로고침
         fetchWorks();
       } else {
         alert(data.error || '삭제에 실패했습니다.');
@@ -146,12 +110,27 @@ export default function AdminWorksPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Works 관리</h1>
+            <p className="mt-1 text-sm text-gray-600">
+              작업 목록을 관리하고 편집할 수 있습니다.
+            </p>
+          </div>
+          <button
+            onClick={() => router.push('/admin/works/new')}
+            className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            새 작업 추가
+          </button>
+        </div>
+
         {/* Filters */}
         <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -176,23 +155,9 @@ export default function AdminWorksPage() {
               <option value="all">모든 카테고리</option>
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
-                  {category.display_name}
+                  {category.displayName}
                 </option>
               ))}
-            </select>
-
-            {/* Status Filter */}
-            <select
-              value={selectedStatus}
-              onChange={(e) => {
-                setSelectedStatus(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            >
-              <option value="all">모든 상태</option>
-              <option value="true">활성화만 보기</option>
-              <option value="false">비활성화만 보기</option>
             </select>
           </div>
         </div>
@@ -238,9 +203,6 @@ export default function AdminWorksPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       조회수
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      상태
-                    </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       작업
                     </th>
@@ -252,7 +214,7 @@ export default function AdminWorksPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
                           <Image
-                            src={work.thumbnail_image}
+                            src={work.thumbnailImage}
                             alt={work.title}
                             fill
                             className="object-cover"
@@ -268,39 +230,17 @@ export default function AdminWorksPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                           <Tag className="w-3 h-3 mr-1" />
-                          {work.category_display_name}
+                          {work.categoryDisplayName}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center text-sm text-gray-600">
                           <Calendar className="w-4 h-4 mr-1" />
-                          {new Date(work.event_date).toLocaleDateString('ko-KR')}
+                          {new Date(work.eventDate).toLocaleDateString('ko-KR')}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {work.view_count.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleToggleActive(work.id, work.is_active)}
-                          className={`inline-flex items-center px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                            work.is_active
-                              ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                          }`}
-                        >
-                          {work.is_active ? (
-                            <>
-                              <Eye className="w-3 h-3 mr-1" />
-                              <span>활성</span>
-                            </>
-                          ) : (
-                            <>
-                              <EyeOff className="w-3 h-3 mr-1" />
-                              <span>비활성</span>
-                            </>
-                          )}
-                        </button>
+                        {work.viewCount.toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
