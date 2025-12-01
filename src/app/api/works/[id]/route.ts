@@ -1,7 +1,11 @@
 // src/app/api/works/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/utils/db';
-import { WorkItemDB, WorkItem } from '@/types/works';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function GET(
   request: NextRequest,
@@ -18,90 +22,103 @@ export async function GET(
       );
     }
 
-    // 작업 상세 정보 조회
-    const works = await query<WorkItemDB>(
-      `SELECT 
-        w.id,
-        w.title,
-        w.category_id,
-        c.display_name as category_display_name,
-        w.description,
-        w.event_date,
-        w.thumbnail_image,
-        w.content_images,
-        w.view_count,
-        w.created_at,
-        w.updated_at
-       FROM works w
-       JOIN work_categories c ON w.category_id = c.id
-       WHERE w.id = ? AND w.is_active = 1`,
-      [workId]
-    );
+    // 작업 상세 조회
+    const { data: works, error: worksError } = await supabase
+      .from('works')
+      .select(`
+        id,
+        title,
+        category_id,
+        description,
+        event_date,
+        thumbnail_image,
+        content_images,
+        view_count,
+        created_at,
+        updated_at,
+        work_categories (
+          display_name
+        )
+      `)
+      .eq('id', workId)
+      .eq('is_active', true) // boolean으로 변경
+      .limit(1);
 
-    if (works.length === 0) {
+    if (worksError) {
+      console.error('Work query error:', worksError);
+      return NextResponse.json(
+        { error: 'Failed to load work detail' },
+        { status: 500 }
+      );
+    }
+
+    if (!works || works.length === 0) {
       return NextResponse.json(
         { error: 'Work not found' },
         { status: 404 }
       );
     }
 
-    const work = works[0];
+    const work: any = works[0];
 
     // 조회수 증가
-    await query(
-      'UPDATE works SET view_count = view_count + 1 WHERE id = ?',
-      [workId]
-    );
+    const { error: updateError } = await supabase
+      .from('works')
+      .update({ view_count: work.view_count + 1 })
+      .eq('id', workId);
 
-    // 이전/다음 작업 조회
-    const prevWork = await query<{ id: number; title: string }>(
-      `SELECT id, title 
-       FROM works 
-       WHERE id < ? AND is_active = 1 
-       ORDER BY id DESC 
-       LIMIT 1`,
-      [workId]
-    );
+    if (updateError) {
+      console.error('View count update error:', updateError);
+    }
 
-    const nextWork = await query<{ id: number; title: string }>(
-      `SELECT id, title 
-       FROM works 
-       WHERE id > ? AND is_active = 1 
-       ORDER BY id ASC 
-       LIMIT 1`,
-      [workId]
-    );
+    // prev / next 조회
+    const { data: prevWork } = await supabase
+      .from('works')
+      .select('id, title')
+      .lt('id', workId)
+      .eq('is_active', true) // boolean으로 변경
+      .order('id', { ascending: false })
+      .limit(1);
 
-    // 데이터 변환
+    const { data: nextWork } = await supabase
+      .from('works')
+      .select('id, title')
+      .gt('id', workId)
+      .eq('is_active', true) // boolean으로 변경
+      .order('id', { ascending: true })
+      .limit(1);
+
+    // content_images JSON 처리
     let contentImages: string[] = [];
     if (typeof work.content_images === 'string') {
       try {
         contentImages = JSON.parse(work.content_images);
-      } catch (e) {
+      } catch {
         contentImages = [];
       }
-    } else {
-      contentImages = work.content_images || [];
+    } else if (Array.isArray(work.content_images)) {
+      contentImages = work.content_images;
     }
 
-    const transformedWork: WorkItem = {
+    // 최종 반환 형식 맞추기
+    const transformedWork = {
       id: work.id,
       title: work.title,
       categoryId: work.category_id,
-      categoryDisplayName: work.category_display_name,
+      categoryDisplayName: work.work_categories?.display_name ?? '',
       description: work.description,
       eventDate: work.event_date,
       eventYear: new Date(work.event_date).getFullYear().toString(),
       thumbnailImage: work.thumbnail_image,
       contentImages,
-      viewCount: work.view_count + 1, // 증가된 조회수
+      viewCount: work.view_count + 1,
     };
 
     return NextResponse.json({
       work: transformedWork,
       navigation: {
-        prev: prevWork[0] || null,
-        next: nextWork[0] || null,
+        prev: prevWork?.[0] || null,
+        next: nextWork?.[0] || null,
       },
     });
   } catch (error) {

@@ -1,47 +1,16 @@
-// app/history/page.tsx
+// src/app/history/page.tsx
 import { Metadata } from 'next'
 import Divider from '@/components/ui/Divider';
 import PageHeader from '@/components/sections/PageHeader';
-import YearBar from './_components/YearBar';
+import { getHistoryData } from '@/lib/history';
 
 export const metadata: Metadata = {
   title: 'History',
   description: 'HOWDOYOUDO의 연혁과 주요 프로젝트 기록'
 }
 
-interface HistoryEvent {
-  date: string;
-  description: string;
-}
-
-interface YearData {
-  year: string;
-  events: HistoryEvent[];
-}
-
-interface HistoryData {
-  companyHistory: YearData[];
-}
-
-async function getHistoryData(): Promise<HistoryData> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/history`, {
-      cache: 'no-store'
-    });
-    
-    if (!res.ok) {
-      throw new Error('Failed to fetch history data');
-    }
-    
-    return res.json();
-  } catch (error) {
-    console.error('Error fetching history:', error);
-    return { companyHistory: [] };
-  }
-}
-
 export default async function HistoryPage() {
-  const { companyHistory } = await getHistoryData();
+  const companyHistory = await getHistoryData();
 
   return (
     <div className="min-h-screen bg-white">
@@ -55,9 +24,6 @@ export default async function HistoryPage() {
 
         {/* Divider */}
         <Divider />
-
-        {/* Year Bar */}
-        <YearBar companyHistory={companyHistory} />
 
         {/* Timeline Section */}
         <section className="py-16 bg-white">

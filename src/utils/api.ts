@@ -71,7 +71,7 @@ async function apiCall<T>(
 // 인증 API
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> => {
-    return apiCall<LoginResponse>('/api/dashboard/auth/login', {
+    return apiCall<LoginResponse>('/api/admin/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });

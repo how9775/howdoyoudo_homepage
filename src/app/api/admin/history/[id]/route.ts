@@ -1,27 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/utils/db';
+import { supabaseAdmin } from '@/utils/supabase';
 
 // PUT - history 수정
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
+    const { id } = params;
+    const { year, date, description } = await request.json();
 
-    const body = await request.json();
-    const { year, date, description } = body;
+    const { data, error } = await supabaseAdmin
+      .from('history')
+      .update({ year, date, description })
+      .eq('id', id)
+      .select()
+      .single();
 
-    const result = await query(
-      'UPDATE history SET year = ?, date = ?, description = ? WHERE id = ?',
-      [year, date, description, id]
-    );
-
-    if ((result as any).affectedRows === 0) {
-      return NextResponse.json({ error: 'History not found' }, { status: 404 });
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return NextResponse.json({ error: 'History not found' }, { status: 404 });
+      }
+      throw error;
     }
 
-    return NextResponse.json({ message: 'History updated' });
+    return NextResponse.json({ message: 'History updated', data });
   } catch (error) {
     console.error('Failed to update history:', error);
     return NextResponse.json(
@@ -31,19 +34,24 @@ export async function PUT(
   }
 }
 
-
 // DELETE - history 삭제
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
+    const { id } = params;
 
-    const result = await query('DELETE FROM history WHERE id = ?', [id]);
+    const { error } = await supabaseAdmin
+      .from('history')
+      .delete()
+      .eq('id', id);
 
-    if ((result as any).affectedRows === 0) {
-      return NextResponse.json({ error: 'History not found' }, { status: 404 });
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return NextResponse.json({ error: 'History not found' }, { status: 404 });
+      }
+      throw error;
     }
 
     return NextResponse.json({ message: 'History deleted' });

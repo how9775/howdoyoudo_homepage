@@ -1,14 +1,31 @@
-// DB 데이터 타입
-export interface WorkItemDB {
+// src/types/works.ts
+// Supabase 응답 타입 (실제로 받는 데이터 구조)
+export interface WorkItemFromDB {
   id: number;
   title: string;
   category_id: number;
-  category_display_name: string;
   description: string;
   event_date: string;
   thumbnail_image: string;
   content_images: string | string[];
-  is_active: boolean | number;
+  view_count: number;
+  created_at: string;
+  updated_at: string;
+  work_categories: {  // 단일 객체
+    display_name: string;
+  } | null;
+}
+
+// 전체 Work 데이터 타입 (테이블 구조)
+export interface WorkItemDB {
+  id: number;
+  title: string;
+  category_id: number;
+  description: string;
+  event_date: string;
+  thumbnail_image: string;
+  content_images: string | string[];
+  is_active: boolean;
   view_count: number;
   created_at: string;
   updated_at: string;

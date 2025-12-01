@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/utils/db';
+import { supabaseAdmin } from '@/utils/supabase';
 import { WorkItemDB } from '@/types/works';
 
+// GET - 관리자용 works 조회 (페이징 + 필터)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -12,78 +13,49 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit;
 
-    // WHERE 조건 구성
-    const whereConditions: string[] = [];
-    const queryParams: any[] = [];
+    let queryBuilder = supabaseAdmin
+      .from('works')
+      .select('*, work_categories(display_name)')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (categoryId && categoryId !== 'all') {
-      whereConditions.push('w.category_id = ?');
-      queryParams.push(parseInt(categoryId));
+      queryBuilder = queryBuilder.eq('category_id', parseInt(categoryId));
     }
 
-    // isActive 필터 처리 수정
     if (isActive === 'true') {
-      whereConditions.push('w.is_active = 1');
+      queryBuilder = queryBuilder.eq('is_active', true);
     } else if (isActive === 'false') {
-      whereConditions.push('w.is_active = 0');
+      queryBuilder = queryBuilder.eq('is_active', false);
     }
-    // 'all'이면 조건 추가하지 않음
 
-    const whereClause = whereConditions.length > 0 
-      ? `WHERE ${whereConditions.join(' AND ')}`
-      : '';
+    const { data: works, error } = await queryBuilder;
+    if (error) throw error;
 
-    // 전체 개수 조회
-    const countResult = await query<{ count: number }>(
-      `SELECT COUNT(*) as count 
-       FROM works w
-       ${whereClause}`,
-      queryParams
-    );
-    const totalCount = countResult[0]?.count || 0;
+    // 전체 카운트 조회
+    let countBuilder = supabaseAdmin.from('works').select('*', { count: 'exact' });
+    if (categoryId && categoryId !== 'all') countBuilder = countBuilder.eq('category_id', parseInt(categoryId));
+    if (isActive === 'true') countBuilder = countBuilder.eq('is_active', true);
+    if (isActive === 'false') countBuilder = countBuilder.eq('is_active', false);
 
-    // 데이터 조회 (관리자용 - 필터에 따라 조회)
-    const works = await query<WorkItemDB>(
-      `SELECT 
-        w.id,
-        w.title,
-        w.category_id,
-        c.display_name as category_display_name,
-        w.description,
-        w.event_date,
-        w.thumbnail_image,
-        w.content_images,
-        w.is_active,
-        w.view_count,
-        w.created_at,
-        w.updated_at
-       FROM works w
-       JOIN work_categories c ON w.category_id = c.id
-       ${whereClause}
-       ORDER BY w.created_at DESC
-       LIMIT ? OFFSET ?`,
-      [...queryParams, limit, offset]
-    );
-
+    const { count: totalCount } = await countBuilder;
+    
     // 카테고리 목록 조회
-    const categories = await query<{
-      id: number;
-      display_name: string;
-      is_active: boolean;
-    }>(
-      `SELECT id, display_name, is_active
-       FROM work_categories
-       ORDER BY id ASC`
-    );
+    const { data: categories, error: catError } = await supabaseAdmin
+      .from('work_categories')
+      .select('*')
+      .order('id', { ascending: true });
+    if (catError) throw catError;
 
     return NextResponse.json({
       success: true,
-      works,
-      totalCount,
-      categories,
-      hasMore: offset + limit < totalCount,
+      works: works || [],
+      totalCount: totalCount || 0,
+      categories: categories || [],
+      hasMore: offset + limit < (totalCount || 0),
       currentPage: page,
     });
+
   } catch (error) {
     console.error("Error reading admin works data:", error);
     return NextResponse.json(
@@ -93,6 +65,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// POST - 새 work 추가
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -105,7 +78,6 @@ export async function POST(request: NextRequest) {
       contentImages = [],
     } = body;
 
-    // 입력값 검증
     if (!title || !description || !categoryId || !eventDate || !thumbnailImage) {
       return NextResponse.json(
         { success: false, error: '필수 필드를 모두 입력해주세요.' },
@@ -113,26 +85,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 작업 생성
-    const result = await query(
-      `INSERT INTO works 
-       (title, description, category_id, event_date, thumbnail_image, content_images, is_active, view_count)
-       VALUES (?, ?, ?, ?, ?, ?, 1, 0)`,
-      [
+    const { data, error } = await supabaseAdmin
+      .from('works')
+      .insert({
         title,
         description,
-        categoryId,
-        eventDate,
-        thumbnailImage,
-        JSON.stringify(contentImages),
-      ]
-    );
+        category_id: categoryId,
+        event_date: eventDate,
+        thumbnail_image: thumbnailImage,
+        content_images: contentImages,
+        is_active: true,
+        view_count: 0
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json({
       success: true,
       message: '작업이 성공적으로 생성되었습니다.',
-      workId: (result as any).insertId,
+      work: data
     });
+
   } catch (error) {
     console.error('Error creating work:', error);
     return NextResponse.json(

@@ -1,32 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/utils/db';
+import { supabaseAdmin } from '@/utils/supabase';
 
 // GET - 모든 history 조회 (관리자용)
 export async function GET() {
   try {
-    const rows = await query(
-      'SELECT * FROM history ORDER BY CAST(year AS UNSIGNED) DESC, date DESC'
-    );
-    
-    // 배열인지 확인
-    if (!Array.isArray(rows)) {
-      console.error('Query did not return an array:', rows);
-      return NextResponse.json([], { status: 200 });
-    }
-    
-    return NextResponse.json(rows);
+    const { data, error } = await supabaseAdmin
+      .from('history')
+      .select('*')
+      .order('year', { ascending: false })
+      .order('date', { ascending: false });
+
+    if (error) throw error;
+
+    return NextResponse.json(data || []);
   } catch (error) {
     console.error('Failed to fetch histories:', error);
     return NextResponse.json([], { status: 200 });
   }
 }
 
-
 // POST - 새 history 추가
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { year, date, description } = body;
+    const { year, date, description } = await request.json();
 
     if (!year || !date || !description) {
       return NextResponse.json(
@@ -35,13 +31,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await query(
-      'INSERT INTO history (year, date, description) VALUES (?, ?, ?)',
-      [year, date, description]
-    );
+    const { data, error } = await supabaseAdmin
+      .from('history')
+      .insert({ year, date, description })
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json(
-      { message: 'History created', id: (result as any).insertId },
+      { message: 'History created', data },
       { status: 201 }
     );
   } catch (error) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/utils/db';
+import { supabaseAdmin } from '@/utils/supabase';
 import { verifyToken } from '@/lib/jwt';
 
 // GET - 카테고리 목록 조회
@@ -13,11 +13,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const categories = await query(
-      `SELECT id, display_name, is_active, created_at
-       FROM work_categories
-       ORDER BY id ASC`
-    );
+    const { data: categories, error } = await supabaseAdmin
+      .from('work_categories')
+      .select('id, display_name, is_active, created_at')
+      .order('id', { ascending: true });
+
+    if (error) throw error;
 
     return NextResponse.json({
       success: true,
@@ -43,9 +44,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { displayName } = body;
-
+    const { displayName } = await request.json();
     if (!displayName || !displayName.trim()) {
       return NextResponse.json(
         { success: false, error: '카테고리 이름을 입력해주세요.' },
@@ -53,15 +52,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await query(
-      'INSERT INTO work_categories (display_name, is_active) VALUES (?, 1)',
-      [displayName.trim()]
-    );
+    const { data, error } = await supabaseAdmin
+      .from('work_categories')
+      .insert({ display_name: displayName.trim(), is_active: true })
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json({
       success: true,
       message: '카테고리가 성공적으로 생성되었습니다.',
-      data: { id: (result as any).insertId },
+      data,
     });
   } catch (error) {
     console.error('카테고리 생성 오류:', error);
@@ -85,7 +87,6 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const categoryId = searchParams.get('id');
-
     if (!categoryId) {
       return NextResponse.json(
         { success: false, error: '카테고리 ID가 필요합니다.' },
@@ -94,12 +95,14 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 해당 카테고리를 사용하는 게시글이 있는지 확인
-    const worksCount = await query<{ count: number }>(
-      'SELECT COUNT(*) as count FROM works WHERE category_id = ?',
-      [parseInt(categoryId)]
-    );
+    const { data: works, error: worksError } = await supabaseAdmin
+      .from('works')
+      .select('id', { count: 'exact', head: true })
+      .eq('category_id', parseInt(categoryId));
 
-    if (worksCount[0].count > 0) {
+    if (worksError) throw worksError;
+
+    if ((works as any)?.count > 0) {
       return NextResponse.json(
         {
           success: false,
@@ -109,9 +112,13 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await query('DELETE FROM work_categories WHERE id = ?', [
-      parseInt(categoryId),
-    ]);
+    // 삭제
+    const { error } = await supabaseAdmin
+      .from('work_categories')
+      .delete()
+      .eq('id', parseInt(categoryId));
+
+    if (error) throw error;
 
     return NextResponse.json({
       success: true,

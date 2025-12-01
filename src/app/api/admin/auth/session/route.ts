@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
-import { queryOne } from '@/utils/db';
+import { queryOne } from '@/utils/supabase';
 import { Admin } from '@/types/admin';
 
 export async function GET(request: NextRequest) {
@@ -15,7 +15,6 @@ export async function GET(request: NextRequest) {
     }
 
     const session = verifyToken(token);
-
     if (!session) {
       return NextResponse.json(
         { success: false, error: '유효하지 않은 토큰입니다.' },
@@ -23,11 +22,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 관리자 정보 조회
-    const admin = await queryOne<Admin>(
-      'SELECT id, username, name, ip_address, last_login, login_count FROM admins WHERE id = ? AND is_active = 1',
-      [session.id]
-    );
+    // Supabase에서 관리자 정보 조회
+    const admin = await queryOne<Admin>('admins', {
+      select: 'id, username, name, ip_address, last_login, login_count',
+      where: { id: session.id, is_active: true }
+    });
 
     if (!admin) {
       return NextResponse.json(
@@ -47,7 +46,6 @@ export async function GET(request: NextRequest) {
         login_count: admin.login_count,
       },
     });
-
   } catch (error) {
     console.error('세션 확인 중 오류:', error);
     return NextResponse.json(
