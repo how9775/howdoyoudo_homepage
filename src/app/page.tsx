@@ -8,8 +8,6 @@ export default function Home() {
     <div className="relative">
       {/* Hero Section */}
       <HeroSection />
-      
-      {/* Transition Section with Scroll Animation */}
       <section className="relative py-10 bg-white">
 
         <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
@@ -27,7 +25,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-      
       
       <ImageGallery />
     </div>
