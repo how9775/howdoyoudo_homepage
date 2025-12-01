@@ -11,6 +11,7 @@ export default function Home() {
       
       {/* Transition Section with Scroll Animation */}
       <section className="relative py-10 bg-white">
+        
         <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
         
         {/* Animated Divider */}
