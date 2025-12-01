@@ -92,8 +92,8 @@ export async function PUT(
     } = body;
 
     // 업데이트할 필드 구성
-    let updateFields = [];
-    let updateValues = [];
+    const updateFields = [];
+    const updateValues = [];
 
     if (title !== undefined) {
       updateFields.push('title = ?');

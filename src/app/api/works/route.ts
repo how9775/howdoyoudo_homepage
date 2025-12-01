@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const currentYear = new Date().getFullYear();
 
     // WHERE 조건 구성
-    let whereConditions = ['w.is_active = 1'];
+    const whereConditions = ['w.is_active = 1'];
     const queryParams: any[] = [];
 
     if (categoryId && categoryId !== 'all') {

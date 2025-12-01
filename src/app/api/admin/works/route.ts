@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // WHERE 조건 구성
-    let whereConditions: string[] = [];
+    const whereConditions: string[] = [];
     const queryParams: any[] = [];
 
     if (categoryId && categoryId !== 'all') {

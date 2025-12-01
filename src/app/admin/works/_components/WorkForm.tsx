@@ -168,7 +168,7 @@ export default function WorkForm({
 
     try {
       let thumbnailUrl = keepExistingThumbnail || '';
-      let newImageUrls: string[] = [];
+      const newImageUrls: string[] = [];
 
       // 썸네일 업로드 (새로 선택한 경우)
       if (thumbnailFile) {

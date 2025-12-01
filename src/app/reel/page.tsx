@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Eye, ThumbsUp, Clock } from 'lucide-react';
 import type { YouTubeVideo } from '@/types/youtube';
 import PageHeader from '@/components/sections/PageHeader';
+import Image from 'next/image';
 
 export default function ReelPage() {
   const [activeTab, setActiveTab] = useState<'videos' | 'shorts'>('shorts');
@@ -153,10 +154,11 @@ export default function ReelPage() {
                     className={`relative overflow-hidden rounded-lg bg-gray-100 ${activeTab === 'shorts' ? 'aspect-[9/16]' : 'aspect-video'
                       }`}
                   >
-                    <img
+                    <Image
                       src={video.thumbnail}
                       alt={video.title}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      fill
                     />
 
                     {/* Overlay */}

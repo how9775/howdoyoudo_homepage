@@ -1,13 +1,33 @@
-import React from 'react'
-import YearBar from './_components/YearBar'
+// src/app/history/layout.tsx
+import YearBar from "./_components/YearBar"
 
-function Layout({ children}: {children: React.ReactNode}) {
+async function getHistoryYears() {
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/history`, {
+            cache: 'no-store'
+        })
+        
+        if (!response.ok) return []
+        
+        const data = await response.json()
+        return data
+    } catch (error) {
+        console.error('Failed to fetch history:', error)
+        return []
+    }
+}
+
+export default async function HistoryLayout({
+    children,
+}: {
+    children: React.ReactNode
+}) {
+    const companyHistory = await getHistoryYears()
+
     return (
         <>
             {children}
-            <YearBar/>
+            <YearBar companyHistory={companyHistory}/>
         </>
     )
 }
-
-export default Layout
