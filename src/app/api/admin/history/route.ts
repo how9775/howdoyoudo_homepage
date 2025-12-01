@@ -7,15 +7,20 @@ export async function GET() {
     const rows = await query(
       'SELECT * FROM history ORDER BY CAST(year AS UNSIGNED) DESC, date DESC'
     );
+    
+    // 배열인지 확인
+    if (!Array.isArray(rows)) {
+      console.error('Query did not return an array:', rows);
+      return NextResponse.json([], { status: 200 });
+    }
+    
     return NextResponse.json(rows);
   } catch (error) {
     console.error('Failed to fetch histories:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch histories' },
-      { status: 500 }
-    );
+    return NextResponse.json([], { status: 200 });
   }
 }
+
 
 // POST - 새 history 추가
 export async function POST(request: NextRequest) {
