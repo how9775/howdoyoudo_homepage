@@ -273,7 +273,7 @@ const ProcessFlow: React.FC<ProcessFlowProps> = ({ className = '' }) => {
         const currentRadius = data.radiusOffset + wave;
 
         // 원의 중심 위치
-        let centerPos = circlePositions[currentCircleIndex].clone();
+        const centerPos = circlePositions[currentCircleIndex].clone();
         
         // 전환 중이면 다음 원으로 보간
         if (transitionProgress > 0) {
