@@ -10,7 +10,7 @@ export default function AboutSection() {
   }
 
   return (
-    <section className="pb-20 sm:pb-32 lg:pb-40">
+    <section className="pb-20 sm:pb-32 lg:pb-40 bg-gradient-to-b from-gray-100 to-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-16 sm:space-y-24 lg:space-y-32">
 
         <AboutCard

@@ -19,16 +19,16 @@ const AboutHeroTitle: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div className="relative h-screen w-full flex items-center justify-center px-4 sm:px-6 bg-white">
       {/* Subtle Background Gradient */}
-      <div className="absolute inset-0 -z-10" />
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white -z-10" />
 
-      {/* Decorative Elements - 모바일에서 숨김 */}
+      {/* Decorative Elements */}
       <div className="hidden sm:block absolute top-20 left-10 w-2 h-2 bg-gray-900 rounded-full opacity-30" />
       <div className="hidden sm:block absolute top-32 right-16 w-1.5 h-1.5 bg-gray-700 rounded-full opacity-40" />
       <div className="hidden sm:block absolute bottom-24 left-1/4 w-1 h-1 bg-gray-800 rounded-full opacity-20" />
 
-      <div className="text-center space-y-8 sm:space-y-12">
+      <div className="text-center space-y-8 sm:space-y-12 max-w-7xl">
         {/* Main Title - CREATIVE */}
         <div className="relative">
           <h1
@@ -95,6 +95,28 @@ const AboutHeroTitle: React.FC = () => {
           <div className="w-8 sm:w-12 h-px bg-gradient-to-r from-transparent to-gray-400" />
           <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-gray-900 rounded-full" />
           <div className="w-8 sm:w-12 h-px bg-gradient-to-l from-transparent to-gray-400" />
+        </div>
+      </div>
+
+      {/* Scroll Indicator */}
+      <div 
+        className={`absolute bottom-8 left-1/2 -translate-x-1/2 transition-all duration-1000 ease-out ${
+          showDescription ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`}
+      >
+        <div className="flex flex-col items-center gap-2 animate-bounce">
+          <span className="text-sm text-gray-500">Scroll</span>
+          <svg 
+            className="w-6 h-6 text-gray-500" 
+            fill="none" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth="2" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+          </svg>
         </div>
       </div>
     </div>

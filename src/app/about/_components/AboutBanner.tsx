@@ -2,7 +2,7 @@
 
 import React from 'react';
 import ParticleBackground from './ParticleBackground';
-import ProcessCube from './ProcessCube';
+import ProcessFlow from './ProcessFlow';
 
 interface AboutBannerProps {
   height?: string;
@@ -22,7 +22,7 @@ const AboutBanner: React.FC<AboutBannerProps> = ({
       {/* Background Particles */}
       <ParticleBackground />
 
-      {/* ✅ 비네팅 효과 - 검은색 그라데이션 */}
+      {/* 비네팅 효과 - 검은색 그라데이션 */}
       <div
         className="absolute inset-0 z-[1] pointer-events-none"
         style={{
@@ -72,19 +72,9 @@ const AboutBanner: React.FC<AboutBannerProps> = ({
           BTL영역의 통합적인 Marketing 전략으로 One-Stop Service를 제공합니다.
         </p>
 
-        {/* Process Boxes - 모바일에서도 가로 배치 */}
-        <div className="flex flex-row gap-3 sm:gap-4 md:gap-12 lg:gap-16 items-center justify-center w-full max-w-[1200px] px-4">
-          <div className="flex-shrink-0 w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] md:w-[200px] md:h-[200px] lg:w-[220px] lg:h-[220px] xl:w-[250px] xl:h-[250px] opacity-0 scale-75 animate-[fadeInScale_0.8s_ease_1.2s_forwards]">
-            <ProcessCube text="기획" />
-          </div>
-
-          <div className="flex-shrink-0 w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] md:w-[200px] md:h-[200px] lg:w-[220px] lg:h-[220px] xl:w-[250px] xl:h-[250px] opacity-0 scale-75 animate-[fadeInScale_0.8s_ease_1.6s_forwards]">
-            <ProcessCube text="준비" />
-          </div>
-
-          <div className="flex-shrink-0 w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] md:w-[200px] md:h-[200px] lg:w-[220px] lg:h-[220px] xl:w-[250px] xl:h-[250px] opacity-0 scale-75 animate-[fadeInScale_0.8s_ease_2s_forwards]">
-            <ProcessCube text="운영" />
-          </div>
+        {/* Process Flow - 3개의 원과 흐르는 파티클을 하나의 컴포넌트로 */}
+        <div className="w-full max-w-[900px] h-[120px] sm:h-[150px] md:h-[250px] lg:h-[280px] xl:h-[300px] opacity-0 scale-75 animate-[fadeInScale_0.8s_ease_1.2s_forwards]">
+          <ProcessFlow />
         </div>
       </div>
 
