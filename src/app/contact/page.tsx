@@ -30,8 +30,7 @@ export default function Page() {
                                         <Mail className="w-4 h-4 md:w-6 md:h-6" />
                                     </div>
                                     <h3 className="text-[10px] md:text-sm font-semibold mb-1 md:mb-2 tracking-wider">EMAIL:</h3>
-                                    <p className="text-[9px] md:text-sm text-gray-300">hello@company.com</p>
-                                    <p className="text-[9px] md:text-sm text-gray-300">support@company.com</p>
+                                    <p className="text-[9px] md:text-sm text-gray-300">how9775@naver.com</p>
                                 </div>
 
                                 {/* Phone */}
