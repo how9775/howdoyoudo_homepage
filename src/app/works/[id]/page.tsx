@@ -30,24 +30,25 @@ async function getWorkDetail(id: string): Promise<WorkDetailResponse | null> {
   }
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const {id } = await params;
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+
   const data = await getWorkDetail(id);
-
   if (!data) {
-    return {
-      title: 'Work Not Found',
-    };
+    return { title: 'Work Not Found' };
   }
-
   return {
     title: `${data.work.title} | HOWDOYOUDO`,
     description: data.work.description,
   };
 }
 
-export default async function WorkDetailPage({ params }: { params: { id: string } }) {
-  const id = await params.id;
+export default async function WorkDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const data = await getWorkDetail(id);
 
   if (!data) {

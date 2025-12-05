@@ -1,4 +1,3 @@
-// src/app/api/history/route.ts
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabase';
 
