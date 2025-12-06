@@ -66,6 +66,7 @@ function Header() {
         if (pathname.startsWith('/admin/works')) return 'Works 관리';
         if (pathname.startsWith('/admin/analytics')) return '통계';
         if (pathname.startsWith('/admin/history')) return '연혁 관리';
+        if (pathname.startsWith('/admin/settings')) return '설정';
         return '관리자';
     };
 
@@ -74,6 +75,7 @@ function Header() {
         if (pathname.startsWith('/admin/works')) return 'Works Management';
         if (pathname.startsWith('/admin/analytics')) return 'HOWDOYOUDO Analytics';
         if (pathname.startsWith('/admin/history')) return 'History Management';
+        if (pathname.startsWith('/admin/history')) return 'Settings';
         return 'Admin';
     };
 
@@ -133,6 +135,15 @@ function Header() {
                                     }`}
                             >
                                 연혁 관리
+                            </Link>
+                            <Link
+                                href="/admin/settings"
+                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${pathname.startsWith('/admin/settings')
+                                    ? 'bg-gray-900 text-white'
+                                    : 'text-gray-600 hover:bg-gray-100'
+                                    }`}
+                            >
+                                설정
                             </Link>
                         </nav>
 

@@ -131,7 +131,7 @@ export default function AnalyticsPage() {
   const maxViews = data ? Math.max(...data.dailyStats.map(d => d.views)) : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
 
       {/* Main Content - Dashboard와 동일한 max-width */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

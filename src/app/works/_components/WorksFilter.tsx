@@ -23,7 +23,7 @@ export default function WorksFilter({
         {/* 데스크톱 버전 */}
         <div className="hidden md:flex flex-row justify-between items-center gap-4">
           {/* 연도 필터 (왼쪽) */}
-          <div className="flex flex-wrap items-center gap-3">
+          {/* <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => onYearChange(null)}
               className={`
@@ -63,10 +63,10 @@ export default function WorksFilter({
             >
               이전
             </button>
-          </div>
+          </div> */}
 
           {/* 카테고리 필터 (오른쪽) */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 w-full justify-center">
             <button
               onClick={() => onCategoryChange(null)}
               className={`
@@ -102,7 +102,7 @@ export default function WorksFilter({
         {/* 모바일 버전 - 셀렉트 박스 */}
         <div className="md:hidden flex flex-col gap-3">
           {/* 연도 필터 셀렉트 */}
-          <div className="w-full">
+          {/* <div className="w-full">
             <select
               value={selectedYear || 'all'}
               onChange={(e) => {
@@ -124,7 +124,7 @@ export default function WorksFilter({
               <option value="recent">최근</option>
               <option value="previous">이전</option>
             </select>
-          </div>
+          </div> */}
 
           {/* 카테고리 필터 셀렉트 */}
           <div className="w-full">
