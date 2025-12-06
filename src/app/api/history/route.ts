@@ -1,3 +1,4 @@
+// src/app/api/history/route.ts
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabase';
 
@@ -5,9 +6,8 @@ export async function GET() {
   try {
     const { data, error } = await supabaseAdmin
       .from('history')
-      .select('id, year, date, description')
-      .order('year', { ascending: false })
-      .order('date', { ascending: false });
+      .select('id, year, date, description, order')
+      .order('order', { ascending: true });
 
     if (error) throw error;
 
