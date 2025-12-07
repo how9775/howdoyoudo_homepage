@@ -2,6 +2,7 @@
 
 import CompanyProfileSetting from '@/components/admin/CompanyProfileSetting';
 import ContactSetting from '@/components/admin/ContactSetting';
+import IntroductionToggleSetting from '@/components/admin/IntroductionToggleSetting';
 import React from 'react';
 
 function SettingsPage() {
@@ -19,6 +20,7 @@ function SettingsPage() {
           {/* 회사소개서 설정 */}
           <CompanyProfileSetting />
           <ContactSetting/>
+          <IntroductionToggleSetting/>
         </div>
       </div>
     </div>

@@ -1,12 +1,32 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import Link from 'next/link'
+import { useEffect, useRef, useState } from 'react'
 import CTAButton from '../ui/CTAButton'
 
 export default function HeroSection() {
   const heroRef = useRef<HTMLElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
+  const [showIntroButton, setShowIntroButton] = useState(true)
+
+  useEffect(() => {
+    // 설정 로드
+    const loadSettings = async () => {
+      try {
+        const response = await fetch('/api/settings');
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+          setShowIntroButton(data.data.introductionFileShown);
+        }
+      } catch (error) {
+        console.error('설정 로드 오류:', error);
+        // 에러시 기본값(true)으로 표시
+        setShowIntroButton(true);
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -57,10 +77,14 @@ export default function HeroSection() {
           성공적인 BTL 마케팅을 위한 One-Stop 파트너
         </p>
 
-        {/* CTA Button - Link로 변경 */}
+        {/* CTA Buttons */}
         <div className="hero-button mt-12 flex justify-center items-center gap-4">
           <CTAButton href="/works">Our Works</CTAButton>
-          <CTAButton invert onClick={() => window.open('/api/file/introduction', '_blank')}>회사 소개서</CTAButton>
+          {showIntroButton && (
+            <CTAButton invert onClick={() => window.open('/api/file/introduction', '_blank')}>
+              회사 소개서
+            </CTAButton>
+          )}
         </div>
       </div>
 
