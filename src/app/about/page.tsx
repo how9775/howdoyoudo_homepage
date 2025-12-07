@@ -12,7 +12,7 @@ export default function AboutPage() {
       <AboutSection />
       {/* Scroll Stack Section - All 3 Cards */}
       <ScrollStackSection
-        bg="bg-gradient-to-b from-white via-gray-50 to-gray-100"
+        bg="bg-gradient-to-b from-white via-gray-100 to-gray-50"
         cards={[
           {
             title: "PROPOSALS",

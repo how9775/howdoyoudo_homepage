@@ -122,16 +122,14 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
               // 모바일: 아래에서 위로 올라오며 스택
               const titleBarHeight = 56 // h-14 = 56px
               
-              // 각 카드는 이전 카드보다 타이틀바 높이만큼 아래에 위치
-              // 이렇게 하면 이전 카드의 타이틀바만 보임
-              const stackOffsetY = cardIndex * titleBarHeight // 0, 56, 112, 168...
-              const slideY = (1 - appearProgress) * 300 // 아래에서 시작 (양수)
+              const stackOffsetY = cardIndex * titleBarHeight - 50
+              const slideY = (1 - appearProgress) * 300
               const finalY = stackOffsetY + slideY // 최종 Y 위치
               
               transform = `translateY(${finalY}px)`
             } else {
               // 데스크톱: 오른쪽으로 스택
-              const stackOffsetX = cardIndex * 80
+              const stackOffsetX = cardIndex * 80 - 70
               const slideX = (1 - appearProgress) * 300
               const finalX = slideX + stackOffsetX
               
@@ -156,7 +154,7 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
               >
                 {isMobile ? (
                   /* 모바일: 타이틀바 + 카드를 하나의 박스로 */
-                  <div className="relative w-[90vw] h-[80vh] backdrop-blur-2xl bg-gradient-to-br from-white/70 via-white/90 to-white/70 border-2 border-white/70 shadow-[0_20px_80px_rgba(0,0,0,0.15)] rounded-2xl overflow-hidden flex flex-col">
+                  <div className="relative w-[90vw] h-[60vh] backdrop-blur-2xl bg-gradient-to-br from-white/70 via-white/90 to-white/70 border-2 border-white/70 shadow-[0_20px_80px_rgba(0,0,0,0.15)] rounded-2xl overflow-hidden flex flex-col">
                     {/* 타이틀바 */}
                     {isActive && (
                       <div 
