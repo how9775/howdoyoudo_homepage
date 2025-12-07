@@ -1,6 +1,7 @@
 'use client';
 
 import CompanyProfileSetting from '@/components/admin/CompanyProfileSetting';
+import ContactSetting from '@/components/admin/ContactSetting';
 import React from 'react';
 
 function SettingsPage() {
@@ -17,7 +18,7 @@ function SettingsPage() {
         <div className="space-y-4">
           {/* 회사소개서 설정 */}
           <CompanyProfileSetting />
-
+          <ContactSetting/>
         </div>
       </div>
     </div>
