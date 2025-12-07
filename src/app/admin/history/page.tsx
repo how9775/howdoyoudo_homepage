@@ -34,23 +34,48 @@ type SaveStatus = 'saved' | 'saving' | 'unsaved';
 
 const ITEMS_PER_PAGE = 20;
 
+// SaveStatusBadge 컴포넌트
+function SaveStatusBadge({ status }: { status: SaveStatus }) {
+    if (status === 'saved') return null;
+
+    return (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 text-sm">
+            {status === 'saving' ? (
+                <>
+                    <Clock className="w-4 h-4 text-blue-600 animate-spin" />
+                    <span className="text-gray-700">저장 중...</span>
+                </>
+            ) : (
+                <>
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                    <span className="text-gray-700">저장 대기</span>
+                </>
+            )}
+        </div>
+    );
+}
+
 // SortableRow 컴포넌트
 function SortableRow({
     item,
     isEditing,
+    isSaving,
     isSelected,
     onSelect,
     onEdit,
     onSave,
+    onCancel,
     onDelete,
     onUpdate,
 }: {
     item: HistoryItem;
     isEditing: boolean;
+    isSaving: boolean;
     isSelected: boolean;
     onSelect: (checked: boolean) => void;
     onEdit: () => void;
     onSave: () => void;
+    onCancel: () => void;
     onDelete: () => void;
     onUpdate: (field: keyof HistoryItem, value: any) => void;
 }) {
@@ -96,12 +121,11 @@ function SortableRow({
                     <input
                         type="text"
                         value={item.year}
-                        onChange={(e) => onUpdate('year', e.target.value)}
-                        className="w-20 px-2 py-1 border border-gray-300 rounded text-center"
-                        maxLength={4}
+                        readOnly
+                        className="w-20 px-2 py-1 bg-gray-100 border border-gray-300 rounded text-center"
                     />
                 ) : (
-                    <span className="text-sm font-medium text-gray-900">{item.year}</span>
+                    <span className="text-sm text-gray-900">{item.year}</span>
                 )}
             </td>
             <td className="px-4 py-3" style={{ width: '160px' }}>
@@ -119,11 +143,12 @@ function SortableRow({
             </td>
             <td className="px-4 py-3" style={{ width: 'auto' }}>
                 {isEditing ? (
-                    <textarea
+                    <input
+                        type="text"
                         value={item.description}
                         onChange={(e) => onUpdate('description', e.target.value)}
                         className="w-full px-2 py-1 border border-gray-300 rounded"
-                        rows={2}
+                        placeholder="설명을 입력하세요"
                     />
                 ) : (
                     <span className="text-sm text-gray-900">{item.description}</span>
@@ -131,163 +156,58 @@ function SortableRow({
             </td>
             <td className="px-4 py-3 text-center" style={{ width: '80px' }}>
                 {isEditing ? (
-                    <button
-                        onClick={onSave}
-                        className="text-green-600 hover:text-green-800"
-                        title="저장"
-                    >
-                        <Save className="w-5 h-5" />
-                    </button>
+                    <div className="flex items-center justify-center gap-1">
+                        <button
+                            onClick={onSave}
+                            disabled={isSaving}
+                            className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="저장"
+                        >
+                            {isSaving ? (
+                                <Clock className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Check className="w-4 h-4" />
+                            )}
+                        </button>
+                        <button
+                            onClick={onCancel}
+                            disabled={isSaving}
+                            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="취소"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
                 ) : (
                     <button
                         onClick={onEdit}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                         title="수정"
                     >
-                        수정
+                        <Save className="w-4 h-4" />
                     </button>
                 )}
             </td>
             <td className="px-4 py-3 text-center" style={{ width: '80px' }}>
                 <button
                     onClick={onDelete}
-                    className="text-red-600 hover:text-red-800"
+                    className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
                     title="삭제"
                 >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-4 h-4" />
                 </button>
             </td>
         </tr>
     );
 }
 
-// 저장 상태 표시 컴포넌트
-function SaveStatusBadge({ status }: { status: SaveStatus }) {
-    if (status === 'saved') {
-        return (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm font-medium">
-                <Check className="w-4 h-4" />
-                <span>저장됨</span>
-            </div>
-        );
-    }
-
-    if (status === 'saving') {
-        return (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm font-medium">
-                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                <span>저장 중...</span>
-            </div>
-        );
-    }
-
-    if (status === 'unsaved') {
-        return (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm font-medium">
-                <Clock className="w-4 h-4" />
-                <span>저장 대기 중</span>
-            </div>
-        );
-    }
-
-    return null;
-}
-
-// 페이지네이션 컴포넌트
-function Pagination({ 
-    currentPage, 
-    totalPages, 
-    onPageChange 
-}: { 
-    currentPage: number; 
-    totalPages: number; 
-    onPageChange: (page: number) => void;
-}) {
-    const getPageNumbers = () => {
-        const pages = [];
-        const showPages = 5;
-        
-        let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
-        let endPage = Math.min(totalPages, startPage + showPages - 1);
-        
-        if (endPage - startPage < showPages - 1) {
-            startPage = Math.max(1, endPage - showPages + 1);
-        }
-        
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(i);
-        }
-        
-        return pages;
-    };
-
-    if (totalPages <= 1) return null;
-
-    return (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 sm:px-6">
-            <div className="flex justify-between sm:hidden">
-                <button
-                    onClick={() => onPageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    이전
-                </button>
-                <button
-                    onClick={() => onPageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="relative ml-3 inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    다음
-                </button>
-            </div>
-            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                <div>
-                    <p className="text-sm text-gray-700">
-                        전체 <span className="font-medium">{totalPages}</span> 페이지 중{' '}
-                        <span className="font-medium">{currentPage}</span> 페이지
-                    </p>
-                </div>
-                <div>
-                    <nav className="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                        <button
-                            onClick={() => onPageChange(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <ChevronLeft className="h-5 w-5" />
-                        </button>
-                        {getPageNumbers().map((page) => (
-                            <button
-                                key={page}
-                                onClick={() => onPageChange(page)}
-                                className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
-                                    page === currentPage
-                                        ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
-                                        : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50'
-                                }`}
-                            >
-                                {page}
-                            </button>
-                        ))}
-                        <button
-                            onClick={() => onPageChange(currentPage + 1)}
-                            disabled={currentPage === totalPages}
-                            className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <ChevronRight className="h-5 w-5" />
-                        </button>
-                    </nav>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-export default function AdminHistoryPage() {
+// Main Component
+export default function HistoryPage() {
     const [histories, setHistories] = useState<HistoryItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [editingId, setEditingId] = useState<number | null>(null);
+    const [savingId, setSavingId] = useState<number | null>(null);
+    const [originalData, setOriginalData] = useState<HistoryItem | null>(null);
     const [newRow, setNewRow] = useState<Partial<HistoryItem> | null>(null);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
@@ -372,7 +292,7 @@ export default function AdminHistoryPage() {
         }
     };
 
-    // 드래그앤드롭 핸들러 - 현재 페이지 내에서만 작동
+    // 드래그앤드롭 핸들러
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
 
@@ -498,7 +418,23 @@ export default function AdminHistoryPage() {
     };
 
     const handleEdit = (id: number) => {
-        setEditingId(id);
+        // 편집 시작 전에 원본 데이터 백업
+        const item = histories.find(h => h.id === id);
+        if (item) {
+            setOriginalData({ ...item });
+            setEditingId(id);
+        }
+    };
+
+    const handleCancel = (id: number) => {
+        // 원본 데이터로 복원
+        if (originalData) {
+            setHistories(
+                histories.map(h => h.id === id ? originalData : h)
+            );
+        }
+        setEditingId(null);
+        setOriginalData(null);
     };
 
     const handleSave = async (id: number) => {
@@ -506,6 +442,8 @@ export default function AdminHistoryPage() {
         if (!item) return;
 
         const year = extractYearFromDate(item.date);
+
+        setSavingId(id);
 
         try {
             const res = await fetch(`/api/admin/history/${id}`, {
@@ -519,6 +457,7 @@ export default function AdminHistoryPage() {
 
             if (res.ok) {
                 setEditingId(null);
+                setOriginalData(null);
                 await fetchHistories();
             } else {
                 alert('수정에 실패했습니다.');
@@ -526,6 +465,8 @@ export default function AdminHistoryPage() {
         } catch (error) {
             console.error('Failed to update history:', error);
             alert('수정 중 오류가 발생했습니다.');
+        } finally {
+            setSavingId(null);
         }
     };
 
@@ -608,9 +549,9 @@ export default function AdminHistoryPage() {
                             <button
                                 onClick={handleAdd}
                                 disabled={newRow !== null}
-                                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <Plus className="w-5 h-5" />
+                                <Plus className="w-4 h-4" />
                                 새 항목 추가
                             </button>
                         </div>
@@ -619,17 +560,17 @@ export default function AdminHistoryPage() {
             </header>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <div className="overflow-x-auto" style={{ minWidth: '100%' }}>
-                        <DndContext
-                            sensors={sensors}
-                            collisionDetection={closestCenter}
-                            onDragEnd={handleDragEnd}
-                        >
-                            <table className="min-w-full divide-y divide-gray-200" style={{ tableLayout: 'fixed', width: '100%' }}>
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                    >
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200" style={{ tableLayout: 'fixed' }}>
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '48px' }}>
+                                        <th className="px-4 py-3 text-center" style={{ width: '48px' }}>
                                             <input
                                                 type="checkbox"
                                                 checked={isAllSelected}
@@ -637,11 +578,11 @@ export default function AdminHistoryPage() {
                                                 className="rounded border-gray-300"
                                             />
                                         </th>
-                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '80px' }}>
-                                            드래그
+                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '64px' }}>
+                                            순서
                                         </th>
                                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '80px' }}>
-                                            순서
+                                            No.
                                         </th>
                                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '96px' }}>
                                             연도
@@ -670,10 +611,12 @@ export default function AdminHistoryPage() {
                                                 key={item.id}
                                                 item={item}
                                                 isEditing={editingId === item.id}
+                                                isSaving={savingId === item.id}
                                                 isSelected={selectedIds.includes(item.id)}
                                                 onSelect={(checked) => handleSelectOne(item.id, checked)}
                                                 onEdit={() => handleEdit(item.id)}
                                                 onSave={() => handleSave(item.id)}
+                                                onCancel={() => handleCancel(item.id)}
                                                 onDelete={() => handleDelete(item.id)}
                                                 onUpdate={(field, value) => updateField(item.id, field, value)}
                                             />
@@ -708,53 +651,78 @@ export default function AdminHistoryPage() {
                                                 />
                                             </td>
                                             <td className="px-4 py-3" style={{ width: 'auto' }}>
-                                                <textarea
+                                                <input
+                                                    type="text"
                                                     value={newRow.description || ''}
                                                     onChange={(e) => updateNewField('description', e.target.value)}
                                                     onKeyPress={(e) => handleKeyPress(e, true)}
                                                     className="w-full px-2 py-1 border border-gray-300 rounded"
-                                                    rows={2}
                                                     placeholder="설명을 입력하세요"
                                                 />
                                             </td>
                                             <td className="px-4 py-3 text-center" style={{ width: '80px' }}>
-                                                <button
-                                                    onClick={handleSaveNew}
-                                                    className="text-green-600 hover:text-green-800"
-                                                    title="저장"
-                                                >
-                                                    <Save className="w-5 h-5" />
-                                                </button>
+                                                <div className="flex items-center justify-center gap-1">
+                                                    <button
+                                                        onClick={handleSaveNew}
+                                                        className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors"
+                                                        title="저장"
+                                                    >
+                                                        <Check className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={handleCancelNew}
+                                                        className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                                                        title="취소"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                             </td>
-                                            <td className="px-4 py-3 text-center" style={{ width: '80px' }}>
-                                                <button
-                                                    onClick={handleCancelNew}
-                                                    className="text-gray-600 hover:text-gray-800"
-                                                    title="취소"
-                                                >
-                                                    <X className="w-5 h-5" />
-                                                </button>
-                                            </td>
+                                            <td className="px-4 py-3" style={{ width: '80px' }}></td>
                                         </tr>
                                     )}
                                 </tbody>
                             </table>
-                        </DndContext>
-                    </div>
-
-                    {histories.length === 0 && !newRow && (
-                        <div className="text-center py-12 text-gray-500">
-                            등록된 연혁이 없습니다. 새 항목을 추가해주세요.
                         </div>
-                    )}
-
-                    {/* 페이지네이션 */}
-                    <Pagination 
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                    />
+                    </DndContext>
                 </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="mt-6 flex items-center justify-center gap-2">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                            className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        
+                        <div className="flex items-center gap-2">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                <button
+                                    key={page}
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`px-4 py-2 rounded-lg border ${
+                                        currentPage === page
+                                            ? 'bg-gray-900 text-white border-gray-900'
+                                            : 'border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+                        </div>
+
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                            className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
+                    </div>
+                )}
             </main>
         </div>
     );
