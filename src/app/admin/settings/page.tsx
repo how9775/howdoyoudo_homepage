@@ -19,8 +19,8 @@ function SettingsPage() {
         <div className="space-y-4">
           {/* 회사소개서 설정 */}
           <CompanyProfileSetting />
-          <ContactSetting/>
           <IntroductionToggleSetting/>
+          <ContactSetting/>
         </div>
       </div>
     </div>
