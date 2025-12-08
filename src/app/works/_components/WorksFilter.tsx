@@ -18,7 +18,7 @@ export default function WorksFilter({
   onYearChange
 }: WorksFilterProps) {
   return (
-    <section className="py-8 bg-white border-b border-gray-100">
+    <section className="py-0 sm:py-8 bg-white border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* 데스크톱 버전 */}
         <div className="hidden md:flex flex-row justify-between items-center gap-4">

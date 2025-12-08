@@ -24,9 +24,9 @@ function WorkCard({ work }: { work: WorkItem }) {
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
 
-                {/* 카테고리 뱃지 (왼쪽 위) */}
-                <div className="absolute top-3 left-3 z-10">
-                    <span className="text-xs px-3 py-1.5 bg-black bg-opacity-70 text-white rounded-full font-medium">
+                {/* 카테고리 뱃지 (왼쪽 위) - 모바일에서 여백 축소 */}
+                <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
+                    <span className="text-xs px-2.5 py-1 sm:px-3 sm:py-1.5 bg-black bg-opacity-70 text-white rounded-full font-medium">
                         {work.categoryDisplayName}
                     </span>
                 </div>
@@ -93,7 +93,7 @@ export default function WorksGrid({ works, loading, hasMore }: WorksGridProps) {
                     </div>
                 ) : (
                     <div className="text-center py-20">
-                        <p className="text-gray-500 text-lg">선택한 조건에 해당하는 작업이 없습니다.</p>
+                        <p className="text-gray-500 text-sm sm:text-base md:text-lg">선택한 조건에 해당하는 작업이 없습니다.</p>
                     </div>
                 )}
 
@@ -104,9 +104,9 @@ export default function WorksGrid({ works, loading, hasMore }: WorksGridProps) {
                 {!loading && hasMore && works.length > 0 && (
                     <div className="text-center pt-8">
                         <div className="inline-flex items-center space-x-2 text-gray-400">
-                            <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent w-20" />
-                            <span className="text-sm">스크롤하여 더 보기</span>
-                            <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent w-20" />
+                            <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent w-16 sm:w-20" />
+                            <span className="text-xs sm:text-sm">스크롤하여 더 보기</span>
+                            <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent w-16 sm:w-20" />
                         </div>
                     </div>
                 )}
@@ -115,9 +115,9 @@ export default function WorksGrid({ works, loading, hasMore }: WorksGridProps) {
                 {!hasMore && works.length > 0 && (
                     <div className="text-center pt-8">
                         <div className="inline-flex items-center space-x-2 text-gray-400">
-                            <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent w-20" />
-                            <span className="text-sm">더 표시할 게시글이 없습니다</span>
-                            <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent w-20" />
+                            <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent w-16 sm:w-20" />
+                            <span className="text-xs sm:text-sm">더 표시할 게시글이 없습니다</span>
+                            <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent w-16 sm:w-20" />
                         </div>
                     </div>
                 )}
