@@ -27,7 +27,7 @@ export default async function ContactPage() {
 
             {/* Right: Map (Client Component) */}
             <div className="lg:w-1/2">
-              <div className="w-full h-120 rounded-lg overflow-hidden shadow-md">
+              <div className="w-full h-60 sm:h-120 rounded-lg overflow-hidden shadow-md">
                 <KakaoMap
                   lat={37.476744}
                   lng={126.885778}
