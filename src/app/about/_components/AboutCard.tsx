@@ -13,6 +13,7 @@ interface AboutCardProps {
   gradientFrom?: string;
   gradientTo?: string;
   backgroundImage?: string;
+  trackingWidth?: number;
 }
 
 export default function AboutCard({
@@ -24,6 +25,7 @@ export default function AboutCard({
   gradientFrom = '#0F172A',
   gradientTo = '#1E293B',
   backgroundImage,
+  trackingWidth = 0,
 }: AboutCardProps) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
@@ -31,11 +33,11 @@ export default function AboutCard({
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
-    
+
     const rect = cardRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-    
+
     setMousePosition({ x, y });
   };
 
@@ -48,9 +50,8 @@ export default function AboutCard({
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
       viewport={{ once: true }}
-      className={`flex flex-col lg:flex-row items-stretch gap-6 sm:gap-8 ${
-        reverse ? 'lg:flex-row-reverse' : ''
-      }`}
+      className={`flex flex-col lg:flex-row items-stretch gap-6 sm:gap-8 ${reverse ? 'lg:flex-row-reverse' : ''
+        }`}
     >
       {/* Image Card */}
       <motion.div
@@ -58,7 +59,7 @@ export default function AboutCard({
         onMouseMove={handleMouseMove}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        whileHover={{ 
+        whileHover={{
           scale: 1.03,
           rotateY: reverse ? -2 : 2,
         }}
@@ -87,10 +88,10 @@ export default function AboutCard({
         )}
 
         {/* Navy Gradient Overlay */}
-        <div 
+        <div
           className="absolute inset-0 z-10"
           style={{
-            background: backgroundImage 
+            background: backgroundImage
               ? `linear-gradient(135deg, ${gradientFrom}dd, ${gradientTo}ee)`
               : `linear-gradient(135deg, ${gradientFrom}, ${gradientTo})`,
             opacity: 0.85,
@@ -117,21 +118,21 @@ export default function AboutCard({
             transition={{ delay: 0.3, duration: 0.6 }}
             className="space-y-2 sm:space-y-3"
           >
-            <h3 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-none">
+            <div className="text-5xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-none mb-0">
               {title}
-            </h3>
-            <p className="text-lg sm:text-xl lg:text-2xl font-light text-white/90 tracking-wide">
+            </div>
+            <p className={`text-lg sm:text-xl lg:text-2xl font-light text-white/90 ml-1`}  style={{ letterSpacing: trackingWidth ? `${trackingWidth}em` : undefined }}>
               {subtitle}
             </p>
           </motion.div>
         </div>
 
         {/* Border Shadow */}
-        <div 
+        <div
           className="absolute inset-0 z-40 pointer-events-none"
           style={{
-            boxShadow: reverse 
-              ? 'inset -8px 0 24px rgba(0,0,0,0.3)' 
+            boxShadow: reverse
+              ? 'inset -8px 0 24px rgba(0,0,0,0.3)'
               : 'inset 8px 0 24px rgba(0,0,0,0.3)',
           }}
         />
@@ -152,7 +153,7 @@ export default function AboutCard({
               <div className="text-xl sm:text-2xl lg:text-3xl font-semibold leading-relaxed text-gray-900">
                 {headline}
               </div>
-              <motion.div 
+              <motion.div
                 initial={{ scaleX: 0 }}
                 whileInView={{ scaleX: 1 }}
                 viewport={{ once: true }}
@@ -172,7 +173,7 @@ export default function AboutCard({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.7 + idx * 0.1, duration: 0.5 }}
-                className="text-base sm:text-lg lg:text-xl leading-relaxed text-gray-700"
+                className="text-base sm:text-lg lg:text-xl leading-relaxed text-gray-700 mb-0"
               >
                 {line}
               </motion.p>

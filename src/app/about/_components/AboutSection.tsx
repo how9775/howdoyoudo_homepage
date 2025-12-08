@@ -10,27 +10,31 @@ export default function AboutSection() {
   }
 
   return (
-    <section className="pb-20 sm:pb-32 lg:pb-40 bg-gradient-to-b from-white to-gray-50">
+    <section className="pb-20 sm:pb-32 lg:pb-40 bg-gradient-to-b from-white to-gray-50 paper-font">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-16 sm:space-y-24 lg:space-y-32">
 
         <AboutCard
           title="No.1"
           subtitle="하우두유두"
           headline={
-            <>
-              <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-black mb-4 sm:mb-6">
-                {getCurrentYear()}년 경험과 노하우
+            <div className='w-full text-xl'>
+              <div className='flex items-center'>
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-black mb-4 sm:mb-4">
+                  {getCurrentYear()}년 동안 축적된 경험과 노하우
+                </div>
+                <span>를 바탕으로</span>
               </div>
-              <span>기업의 성장과 가치를 위한 완벽한 파트너</span>
-            </>
+              <span>기업 이미지와 경쟁력 강화를 위한 손과 발이 되고자 합니다.</span>
+            </div>
           }
           description={[
-            '시작부터 함께합니다.',
-            '하우두유두 전문가들이 귀사의 성공적인 브랜딩을 이끌 것입니다.',
+            '어디서부터 어떻게 시작해야 할 지 모르셔도 괜찮습니다.',
+            '하우두유두의 인재들이 기업 이미지와 브랜드 확장에 도움을 드릴 것입니다.'
           ]}
           gradientFrom="#172036"
           gradientTo="#0e1b2b"
           backgroundImage="/images/about-no1-bg.jpg"
+          trackingWidth={0.5}
         />
 
         <Divider />
@@ -39,12 +43,15 @@ export default function AboutSection() {
           title="Best"
           subtitle="하우두유두"
           headline={
-            <>
-              <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-black mb-4 sm:mb-6">
-                하우두유두를 움직이는 힘,
+            <div className='w-full text-xl'>
+              <div className='flex items-center'>
+                <span>하우두유두를 지탱하는</span>
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-black mb-4 sm:mb-4">
+                   프로 집단의 Best 정신입니다.
+                </div>
               </div>
-              그것은 바로 프로 집단의 <span className="font-extrabold text-black">Best 정신</span>입니다.
-            </>
+              <span>기업 이미지와 경쟁력 강화를 위한 손과 발이 되고자 합니다.</span>
+            </div>
           }
           description={[
             '적은 광고비로도 목표를 정확히 적중시키는 통쾌한 쌍방향 커뮤니케이션으로,',
@@ -54,6 +61,7 @@ export default function AboutSection() {
           gradientTo="#172036"
           backgroundImage="/images/about-best-bg.jpg"
           reverse
+          trackingWidth={0.6}
         />
 
       </div>
