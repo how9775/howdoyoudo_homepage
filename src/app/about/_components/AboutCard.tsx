@@ -166,7 +166,7 @@ export default function AboutCard({
             </div>
           </div>
 
-          {/* Description - 데스크탑용 (descriptionMobile이 있을 때만) */}
+          {/* Description */}
           {descriptionMobile && (
             <div className="hidden lg:block space-y-2 sm:space-y-3 lg:space-y-5">
               {description.map((line, idx) => (

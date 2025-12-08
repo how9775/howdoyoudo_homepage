@@ -78,7 +78,7 @@ const AboutHeroTitle: React.FC = () => {
           <p className="text-lg sm:text-xl md:text-2xl font-medium text-gray-700 leading-relaxed paper-font">
             HOWDOYOUDO
           </p>
-          <p className="text-base sm:text-lg md:text-xl text-gray-600">
+          <p className="text-sm sm:text-lg md:text-xl text-gray-600">
             기업을 위한 효율적이고 창의적인 전략을 제공합니다
           </p>
         </div>

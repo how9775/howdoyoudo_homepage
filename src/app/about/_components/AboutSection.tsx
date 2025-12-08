@@ -19,12 +19,12 @@ export default function AboutSection() {
           headline={
             <div className='w-full text-center lg:text-left'>
               <div className='flex items-center justify-center lg:justify-start lg:gap-1'>
-                <div className="text-xl sm:text-2xl lg:text-4xl font-black text-black mb-2 sm:mb-3 lg:mb-4">
+                <div className="text-lg sm:text-2xl lg:text-4xl font-black text-black mb-2 sm:mb-3 lg:mb-4">
                   {getCurrentYear()}년 동안 축적된 경험과 노하우
                 </div>
-                <span className="text-base sm:text-lg lg:text-xl mb-1">를 바탕으로</span>
+                <span className="text-sm sm:text-lg lg:text-xl mb-1">를 바탕으로</span>
               </div>
-              <span className="block mt-1 text-base sm:text-lg lg:text-xl">기업 이미지와 경쟁력 강화를 위한 손과 발이 되고자 합니다.</span>
+              <span className="block mt-1 text-sm sm:text-lg lg:text-xl">기업 이미지와 경쟁력 강화를 위한 손과 발이 되고자 합니다.</span>
             </div>
           }
           description={[
@@ -50,12 +50,12 @@ export default function AboutSection() {
           headline={
             <div className='w-full text-center lg:text-left'>
               <div className='flex items-center justify-center lg:justify-start gap-1 lg:gap-2'>
-                <span className="text-base sm:text-lg lg:text-xl mb-1">하우두유두를 지탱하는 프로 집단의 </span>
-                <div className="text-xl sm:text-2xl lg:text-4xl font-black text-black mb-2 sm:mb-3 lg:mb-4">
+                <span className="text-sm sm:text-lg lg:text-xl mb-1">하우두유두를 지탱하는 프로 집단의 </span>
+                <div className="text-lg sm:text-2xl lg:text-4xl font-black text-black mb-2 sm:mb-3 lg:mb-4">
                   Best 정신입니다.
                 </div>
               </div>
-              <span className="block mt-1 text-base sm:text-lg lg:text-xl">기업 이미지와 경쟁력 강화를 위한 손과 발이 되고자 합니다.</span>
+              <span className="block mt-1 text-sm sm:text-lg lg:text-xl">기업 이미지와 경쟁력 강화를 위한 손과 발이 되고자 합니다.</span>
             </div>
           }
           description={[
