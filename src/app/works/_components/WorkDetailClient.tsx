@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Share2, Calendar, Eye, Tag, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Share2, Calendar, Eye, Tag, Check, ChevronLeft, ChevronRight, ArrowLeftToLine } from 'lucide-react';
 import { WorkItem } from '@/types/works';
 
 interface WorkDetailClientProps {
@@ -67,59 +67,34 @@ export default function WorkDetailClient({ initialData }: WorkDetailClientProps)
       )}
 
       {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <main className="max-w-5xl mx-auto px-6 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12">
         {/* Top Navigation */}
-        <div className="flex items-center justify-between mb-8 pb-6">
+        <div className="flex items-center justify-between mb-6 sm:mb-8 pb-4 sm:pb-6">
           <Link
             href="/works"
             data-no-transition="true"
-            className="flex items-center space-x-2 transition-colors"
+            className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors"
           >
-            <span className="font-medium">목록으로</span>
+            <ArrowLeftToLine className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-sm sm:text-base font-medium">목록으로</span>
           </Link>
-
-          <div className="flex items-center gap-2">
-            {navigation.prev && (
-              <Link
-                href={`/works/${navigation.prev.id}`}
-                data-no-transition="true"
-                className="flex items-center space-x-1 px-4 py-2 border border-gray-300 hover:border-gray-900 text-gray-700 hover:text-gray-900 rounded-lg transition-colors"
-                title={navigation.prev.title}
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span className="hidden sm:inline font-medium">이전</span>
-              </Link>
-            )}
-            
-            {navigation.next && (
-              <Link
-                href={`/works/${navigation.next.id}`}
-                data-no-transition="true"
-                className="flex items-center space-x-1 px-4 py-2 border border-gray-300 hover:border-gray-900 text-gray-700 hover:text-gray-900 rounded-lg transition-colors"
-                title={navigation.next.title}
-              >
-                <span className="hidden sm:inline font-medium">다음</span>
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            )}
-          </div>
         </div>
 
         {/* Title Section */}
-        <div className="mb-8 md:mb-12">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+        <div className="mb-6 sm:mb-8 md:mb-12">
+          <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight break-keep">
             {work.title}
           </h1>
 
           {/* Meta Information & Share Button */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+          <div className="flex justify-between gap-3 sm:gap-4">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600">
               <div className="flex items-center space-x-2">
-                <Tag className="w-4 h-4" />
+                <Tag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="font-medium">{work.categoryDisplayName}</span>
               </div>
               <div className="flex items-center space-x-2">
-                <Calendar className="w-4 h-4" />
+                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>{formatDate(work.eventDate)}</span>
               </div>
             </div>
@@ -127,9 +102,9 @@ export default function WorkDetailClient({ initialData }: WorkDetailClientProps)
             {/* Share Button */}
             <button
               onClick={handleShare}
-              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-full transition-colors w-fit"
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-full transition-colors w-fit text-xs sm:text-sm"
             >
-              <Share2 className="w-4 h-4" />
+              <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span className="font-medium">공유하기</span>
             </button>
           </div>
@@ -137,54 +112,50 @@ export default function WorkDetailClient({ initialData }: WorkDetailClientProps)
 
 
         {/* Description */}
-        <div className="mb-12 md:mb-16">
-          <div className="prose prose-lg max-w-none">
-            <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-wrap">
+        <div className="mb-8 sm:mb-12 md:mb-16">
+          <div className="prose prose-sm sm:prose-base lg:prose-lg max-w-none">
+            <p className="text-gray-700 text-sm sm:text-base lg:text-lg leading-relaxed whitespace-pre-wrap">
               {work.description}
             </p>
           </div>
         </div>
 
-        {/* Content Images */}
+        {/* Content Images - 깔끔하게 이미지만 표시 */}
         {work.contentImages.length > 0 && (
-          <div className="space-y-8 md:space-y-12 mb-12 md:mb-16">
+          <div className="space-y-6 sm:space-y-8 md:space-y-12 mb-8 sm:mb-12 md:mb-16">
             {work.contentImages.map((imageUrl, index) => (
-              <div
-                key={index}
-                className="relative w-full rounded-xl overflow-hidden bg-gray-100 shadow-lg"
-              >
-                <div className="relative w-full" style={{ minHeight: '400px' }}>
-                  <Image
-                    src={imageUrl}
-                    alt={`${work.title} - Image ${index + 1}`}
-                    width={1200}
-                    height={800}
-                    className="w-full h-auto"
-                    sizes="(max-width: 1024px) 100vw, 1024px"
-                  />
-                </div>
+              <div key={index} className="w-full">
+                <Image
+                  src={imageUrl}
+                  alt={`${work.title} - Image ${index + 1}`}
+                  width={1200}
+                  height={800}
+                  className="w-full h-auto"
+                  sizes="(max-width: 1024px) 100vw, 1024px"
+                  priority={index === 0}
+                />
               </div>
             ))}
           </div>
         )}
 
         {/* Navigation */}
-        <div className="border-t border-gray-200 pt-8 md:pt-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="border-t border-gray-200 pt-6 sm:pt-8 md:pt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Previous Work */}
             {navigation.prev ? (
               <Link
                 href={`/works/${navigation.prev.id}`}
                 data-no-transition="true"
-                className="group p-6 transition-all duration-300"
+                className="group p-4 sm:p-6 transition-all duration-300"
               >
-                <div className="flex items-center space-x-3 mb-2">
-                  <ChevronLeft className="w-4 h-4 text-gray-400 group-hover:text-gray-900 transition-colors" />
-                  <span className="text-sm font-medium text-gray-500 group-hover:text-gray-900 transition-colors">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                  <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 group-hover:text-gray-900 transition-colors" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-500 group-hover:text-gray-900 transition-colors">
                     이전
                   </span>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 group-hover:text-gray-700 transition-colors">
+                <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 line-clamp-2 group-hover:text-gray-700 transition-colors">
                   {navigation.prev.title}
                 </h3>
               </Link>
@@ -195,15 +166,15 @@ export default function WorkDetailClient({ initialData }: WorkDetailClientProps)
               <Link
                 href={`/works/${navigation.next.id}`}
                 data-no-transition="true"
-                className="group p-6 transition-all duration-300"
+                className="group p-4 sm:p-6 transition-all duration-300"
               >
-                <div className="flex items-center justify-end space-x-3 mb-2">
-                  <span className="text-sm font-medium text-gray-500 group-hover:text-gray-900 transition-colors">
+                <div className="flex items-center justify-end space-x-2 sm:space-x-3 mb-2">
+                  <span className="text-xs sm:text-sm font-medium text-gray-500 group-hover:text-gray-900 transition-colors">
                     다음
                   </span>
-                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-900 transition-colors" />
+                  <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 group-hover:text-gray-900 transition-colors" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 text-right group-hover:text-gray-700 transition-colors">
+                <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 line-clamp-2 text-right group-hover:text-gray-700 transition-colors">
                   {navigation.next.title}
                 </h3>
               </Link>
@@ -212,13 +183,13 @@ export default function WorkDetailClient({ initialData }: WorkDetailClientProps)
         </div>
 
         {/* Back to List Button */}
-        <div className="text-center mt-12 md:mt-16">
+        <div className="text-center mt-8 sm:mt-12 md:mt-16">
           <Link
             href="/works"
             data-no-transition="true"
-            className="inline-flex items-center"
+            className="inline-flex items-center text-gray-700 hover:text-gray-900 transition-colors"
           >
-            <span className="font-medium">목록으로</span>
+            <span className="text-sm sm:text-base font-medium">목록으로</span>
           </Link>
         </div>
       </main>
