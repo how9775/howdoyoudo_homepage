@@ -141,7 +141,7 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
               // 모바일: 아래에서 위로 올라오며 스택
               const titleBarHeight = 56 // h-14 = 56px
               
-              const stackOffsetY = cardIndex * titleBarHeight - 50
+              const stackOffsetY = cardIndex * titleBarHeight - 150 // -50 → -150으로 변경 (더 위로)
               const slideY = (1 - appearProgress) * 300
               const finalY = stackOffsetY + slideY // 최종 Y 위치
               
@@ -177,7 +177,7 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
                 {isMobile ? (
                   /* 모바일: 타이틀바 + 카드를 하나의 박스로 */
                   <div 
-                    className="relative w-[90vw] h-[60vh] bg-gradient-to-br from-white/70 via-white/90 to-white/70 border-2 border-white/70 shadow-[0_20px_80px_rgba(0,0,0,0.15)] rounded-2xl overflow-hidden flex flex-col"
+                    className="relative w-[90vw] h-[75vh] bg-gradient-to-br from-white/70 via-white/90 to-white/70 border-2 border-white/70 shadow-[0_20px_80px_rgba(0,0,0,0.15)] rounded-2xl overflow-hidden flex flex-col"
                     style={{
                       // 🚀 모바일: backdrop-blur 강도 줄임 (24px → 8px)
                       backdropFilter: 'blur(8px)',
@@ -200,10 +200,9 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
 
                     {/* 메인 컨텐츠 */}
                     <div 
-                      className="relative px-5 py-4 flex items-center flex-1"
+                      className="relative px-5 py-4 flex items-center flex-1 overflow-y-auto"
                       style={{
                         perspective: '2000px',
-                        overflow: 'visible',
                       }}
                     >
                       {/* 배경 효과 */}
