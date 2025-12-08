@@ -139,7 +139,7 @@ export default function AboutCard({
       </motion.div>
 
       {/* Text Content Section */}
-      <div className={`flex-1 flex items-center px-4 sm:px-6 mt-8 lg:mt-0 ${reverse ? "lg:mr-12" : "lg:ml-12"}`}>
+      <div className={`flex-1 flex items-center justify-center px-4 sm:px-6 mt-8 lg:mt-0 ${reverse ? "lg:mr-12" : "lg:ml-12"}`}>
         <motion.div
           initial={{ opacity: 0, x: reverse ? -40 : 40 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -149,7 +149,7 @@ export default function AboutCard({
         >
           {/* Headline with accent */}
           <div>
-            <div className="inline-block">
+            <div className="w-full">
               <div className="text-xl sm:text-2xl lg:text-3xl font-semibold leading-relaxed text-gray-900">
                 {headline}
               </div>
@@ -173,7 +173,7 @@ export default function AboutCard({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.7 + idx * 0.1, duration: 0.5 }}
-                className="text-base sm:text-lg lg:text-xl leading-relaxed text-gray-700 mb-0"
+                className="text-sm sm:text-lg lg:text-xl text-center sm:text-start leading-relaxed text-gray-700 mb-0"
               >
                 {line}
               </motion.p>

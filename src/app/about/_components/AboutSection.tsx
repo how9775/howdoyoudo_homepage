@@ -10,21 +10,21 @@ export default function AboutSection() {
   }
 
   return (
-    <section className="pb-20 sm:pb-32 lg:pb-40 bg-gradient-to-b from-white to-gray-50 paper-font">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-16 sm:space-y-24 lg:space-y-32">
+    <section className="pb-20 sm:pb-32 lg:pb-40 bg-gradient-to-b from-white to-whtie paper-font">
+      <div className="max-w-7xl mx-auto space-y-16 sm:space-y-24 lg:space-y-32">
 
         <AboutCard
           title="No.1"
           subtitle="하우두유두"
           headline={
-            <div className='w-full text-xl'>
-              <div className='flex items-center'>
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-black mb-4 sm:mb-4">
+            <div className='w-full text-center lg:text-left'>
+              <div className='flex items-center justify-center lg:justify-start lg:gap-1'>
+                <div className="text-xl sm:text-2xl lg:text-4xl font-black text-black mb-2 sm:mb-3 lg:mb-4">
                   {getCurrentYear()}년 동안 축적된 경험과 노하우
                 </div>
-                <span>를 바탕으로</span>
+                <span className="text-base sm:text-lg lg:text-xl mb-1">를 바탕으로</span>
               </div>
-              <span>기업 이미지와 경쟁력 강화를 위한 손과 발이 되고자 합니다.</span>
+              <span className="block mt-1 text-base sm:text-lg lg:text-xl">기업 이미지와 경쟁력 강화를 위한 손과 발이 되고자 합니다.</span>
             </div>
           }
           description={[
@@ -43,14 +43,14 @@ export default function AboutSection() {
           title="Best"
           subtitle="하우두유두"
           headline={
-            <div className='w-full text-xl'>
-              <div className='flex items-center'>
-                <span>하우두유두를 지탱하는</span>
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-black mb-4 sm:mb-4">
-                   프로 집단의 Best 정신입니다.
+            <div className='w-full text-center lg:text-left'>
+              <div className='flex items-center justify-center lg:justify-start lg:gap-1'>
+                <span className="text-base sm:text-lg lg:text-xl mb-1">하우두유두를 지탱하는</span>
+                <div className="text-xl sm:text-2xl lg:text-4xl font-black text-black mb-2 sm:mb-3 lg:mb-4">
+                  프로 집단의 Best 정신입니다.
                 </div>
               </div>
-              <span>기업 이미지와 경쟁력 강화를 위한 손과 발이 되고자 합니다.</span>
+              <span className="block mt-1 text-base sm:text-lg lg:text-xl">기업 이미지와 경쟁력 강화를 위한 손과 발이 되고자 합니다.</span>
             </div>
           }
           description={[
