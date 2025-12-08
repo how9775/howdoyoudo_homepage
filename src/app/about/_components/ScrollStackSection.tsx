@@ -141,7 +141,7 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
               // 모바일: 아래에서 위로 올라오며 스택
               const titleBarHeight = 56 // h-14 = 56px
               
-              const stackOffsetY = cardIndex * titleBarHeight - 100 // -50 → -150으로 변경 (더 위로)
+              const stackOffsetY = cardIndex * titleBarHeight // -50 → -150으로 변경 (더 위로)
               const slideY = (1 - appearProgress) * 300
               const finalY = stackOffsetY + slideY // 최종 Y 위치
               
