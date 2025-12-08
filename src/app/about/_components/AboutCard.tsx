@@ -9,6 +9,7 @@ interface AboutCardProps {
   subtitle: string;
   headline: ReactNode;
   description: string[];
+  descriptionMobile?: string[]; // 모바일용 추가
   reverse?: boolean;
   gradientFrom?: string;
   gradientTo?: string;
@@ -21,6 +22,7 @@ export default function AboutCard({
   subtitle,
   headline,
   description,
+  descriptionMobile, // 추가
   reverse = false,
   gradientFrom = '#0F172A',
   gradientTo = '#1E293B',
@@ -121,7 +123,7 @@ export default function AboutCard({
             <div className="text-5xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-none mb-0">
               {title}
             </div>
-            <p className={`text-lg sm:text-xl lg:text-2xl font-light text-white/90 ml-1`}  style={{ letterSpacing: trackingWidth ? `${trackingWidth}em` : undefined }}>
+            <p className={`text-lg sm:text-xl lg:text-2xl font-light text-white/90 ml-1`} style={{ letterSpacing: trackingWidth ? `${trackingWidth}em` : undefined }}>
               {subtitle}
             </p>
           </motion.div>
@@ -145,12 +147,12 @@ export default function AboutCard({
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.4, duration: 0.8 }}
-          className="space-y-6 sm:space-y-8 max-w-2xl"
+          className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-2xl"
         >
           {/* Headline with accent */}
           <div>
             <div className="w-full">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-semibold leading-relaxed text-gray-900">
+              <div className="text-lg sm:text-xl lg:text-3xl font-semibold leading-relaxed text-gray-900">
                 {headline}
               </div>
               <motion.div
@@ -158,27 +160,65 @@ export default function AboutCard({
                 whileInView={{ scaleX: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.6, duration: 0.6 }}
-                className="h-0.5 sm:h-1 bg-gradient-to-r from-gray-900 to-gray-500 mt-3 sm:mt-4"
+                className="h-0.5 sm:h-1 bg-gradient-to-r from-gray-900 to-gray-500 mt-2 sm:mt-3 lg:mt-4"
                 style={{ transformOrigin: reverse ? 'right' : 'left' }}
               />
             </div>
           </div>
 
-          {/* Description */}
-          <div className="space-y-3 sm:space-y-5">
-            {description.map((line, idx) => (
-              <motion.p
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.7 + idx * 0.1, duration: 0.5 }}
-                className="text-sm sm:text-lg lg:text-xl text-center sm:text-start leading-relaxed text-gray-700 mb-0"
-              >
-                {line}
-              </motion.p>
-            ))}
-          </div>
+          {/* Description - 데스크탑용 (descriptionMobile이 있을 때만) */}
+          {descriptionMobile && (
+            <div className="hidden lg:block space-y-2 sm:space-y-3 lg:space-y-5">
+              {description.map((line, idx) => (
+                <motion.p
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.7 + idx * 0.1, duration: 0.5 }}
+                  className="text-sm sm:text-base lg:text-xl text-center sm:text-start leading-relaxed text-gray-700 mb-0"
+                >
+                  {line}
+                </motion.p>
+              ))}
+            </div>
+          )}
+
+          {/* Description - 모바일용 (descriptionMobile이 있을 때만) */}
+          {descriptionMobile && (
+            <div className="block lg:hidden space-y-2 sm:space-y-3">
+              {descriptionMobile.map((line, idx) => (
+                <motion.p
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.7 + idx * 0.1, duration: 0.5 }}
+                  className="text-sm text-center sm:text-start leading-relaxed text-gray-700 mb-0"
+                >
+                  {line}
+                </motion.p>
+              ))}
+            </div>
+          )}
+
+          {/* Description - descriptionMobile이 없을 때 (모든 화면) */}
+          {!descriptionMobile && (
+            <div className="space-y-2 sm:space-y-3 lg:space-y-5">
+              {description.map((line, idx) => (
+                <motion.p
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.7 + idx * 0.1, duration: 0.5 }}
+                  className="text-sm sm:text-base lg:text-xl text-center sm:text-start leading-relaxed text-gray-700 mb-0"
+                >
+                  {line}
+                </motion.p>
+              ))}
+            </div>
+          )}
         </motion.div>
       </div>
     </motion.div>

@@ -48,23 +48,23 @@ export default function HeroSection() {
   return (
     <section
       ref={heroRef}
-      className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white overflow-hidden"
+      className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-whtie to-gray-50 overflow-hidden"
     >
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5" />
 
-      {/* Floating Elements */}
+      {/* Floating Elements - 모바일에서 숨김 */}
       <div className="absolute top-20 left-10 w-4 h-4 bg-gray-300 rounded-full animate-float-slow" />
       <div className="absolute top-40 right-20 w-6 h-6 bg-gray-400 rounded-full animate-float-medium" />
-      <div className="absolute bottom-40 left-20 w-3 h-3 bg-gray-500 rounded-full animate-float-fast" />
+      <div className=" absolute bottom-40 left-20 w-3 h-3 bg-gray-500 rounded-full animate-float-fast" />
 
       {/* Main Content */}
       <div
         ref={contentRef}
-        className="relative z-10 text-center max-w-5xl mx-auto"
+        className="relative z-10 text-center max-w-5xl mx-auto px-4 sm:px-6"
       >
-        <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-none">
-          <span className="block text-gray-900 mb-4 hero-text-line-1">
+        <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-none">
+          <span className="block text-gray-900 mb-2 sm:mb-4 hero-text-line-1">
             WELCOME TO
           </span>
           <span className="block bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 bg-clip-text text-transparent hero-text-line-2">
@@ -73,12 +73,12 @@ export default function HeroSection() {
         </h1>
 
         {/* Subtitle */}
-        <p className="hero-subtitle mt-8 text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+        <p className="hero-subtitle mt-6 sm:mt-8 text-sm sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed paper-font px-4">
           성공적인 BTL 마케팅을 위한 One-Stop 파트너
         </p>
 
         {/* CTA Buttons */}
-        <div className="hero-button mt-12 flex justify-center items-center gap-4">
+        <div className="hero-button mt-8 sm:mt-12 flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 px-4">
           <CTAButton href="/works">Our Works</CTAButton>
           {showIntroButton && (
             <CTAButton invert onClick={() => window.open('/api/file/introduction', '_blank')}>
@@ -88,8 +88,8 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+      {/* Scroll Indicator - 모바일에서 숨김 */}
+      <div className="hidden md:block absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
         <div className="w-1 h-16 bg-gradient-to-b from-transparent via-gray-400 to-transparent rounded-full">
           <div className="w-1 h-4 bg-gray-600 rounded-full animate-scroll-indicator" />
         </div>

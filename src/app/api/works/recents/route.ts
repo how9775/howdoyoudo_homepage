@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 데이터 변환
-    const transformedWorks = (data || []).map(work => {
+    const transformedWorks = (data || []).map((work: any) => {
       let contentImages: string[] = [];
 
       if (typeof work.content_images === 'string') {
@@ -54,11 +54,17 @@ export async function GET(request: NextRequest) {
         contentImages = work.content_images;
       }
 
+      // work_categories는 배열 또는 단일 객체일 수 있음
+      const categories = work.work_categories;
+      const categoryDisplayName = Array.isArray(categories)
+        ? categories[0]?.display_name ?? ''
+        : categories?.display_name ?? '';
+
       return {
         id: work.id,
         title: work.title,
         categoryId: work.category_id,
-        categoryDisplayName: work.work_categories?.[0]?.display_name ?? '',
+        categoryDisplayName,  // 여기가 핵심!
         description: work.description,
         eventDate: work.event_date,
         eventYear: new Date(work.event_date).getFullYear().toString(),

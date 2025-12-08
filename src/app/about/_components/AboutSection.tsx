@@ -31,6 +31,11 @@ export default function AboutSection() {
             '어디서부터 어떻게 시작해야 할 지 모르셔도 괜찮습니다.',
             '하우두유두의 인재들이 기업 이미지와 브랜드 확장에 도움을 드릴 것입니다.'
           ]}
+          descriptionMobile={[
+            '어디서부터 어떻게 시작해야 할 지 모르셔도 괜찮습니다.',
+            '하우두유두의 인재들이 기업 이미지와',
+            '브랜드 확장에 도움을 드릴 것입니다.'
+          ]}
           gradientFrom="#172036"
           gradientTo="#0e1b2b"
           backgroundImage="/images/about-no1-bg.jpg"
@@ -44,10 +49,10 @@ export default function AboutSection() {
           subtitle="하우두유두"
           headline={
             <div className='w-full text-center lg:text-left'>
-              <div className='flex items-center justify-center lg:justify-start lg:gap-1'>
-                <span className="text-base sm:text-lg lg:text-xl mb-1">하우두유두를 지탱하는</span>
+              <div className='flex items-center justify-center lg:justify-start gap-1 lg:gap-2'>
+                <span className="text-base sm:text-lg lg:text-xl mb-1">하우두유두를 지탱하는 프로 집단의 </span>
                 <div className="text-xl sm:text-2xl lg:text-4xl font-black text-black mb-2 sm:mb-3 lg:mb-4">
-                  프로 집단의 Best 정신입니다.
+                  Best 정신입니다.
                 </div>
               </div>
               <span className="block mt-1 text-base sm:text-lg lg:text-xl">기업 이미지와 경쟁력 강화를 위한 손과 발이 되고자 합니다.</span>
@@ -56,6 +61,12 @@ export default function AboutSection() {
           description={[
             '적은 광고비로도 목표를 정확히 적중시키는 통쾌한 쌍방향 커뮤니케이션으로,',
             '귀사의 든든한 동반자가 되어 책임 있는 사명감을 성실히 수행하겠습니다.',
+          ]}
+          descriptionMobile={[
+            '적은 광고비로도 목표를 정확히 적중시키는',
+            '통쾌한 쌍방향 커뮤니케이션으로',
+            '귀사의 든든한 동반자가 되어',
+            '책임 있는 사명감을 성실히 수행하겠습니다.'
           ]}
           gradientFrom="#0e1b2b"
           gradientTo="#172036"

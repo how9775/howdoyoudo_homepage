@@ -34,11 +34,11 @@ export default function ImageGallery() {
       try {
         setLoading(true)
         const response = await fetch('/api/works/recents')
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch recent works')
         }
-        
+
         const data: RecentsResponse = await response.json()
         setWorks(data.works)
       } catch (err) {
@@ -66,7 +66,7 @@ export default function ImageGallery() {
         if (entry.isIntersecting) {
           const element = entry.target as HTMLElement
           const delay = parseInt(element.dataset.delay || '0')
-          
+
           setTimeout(() => {
             element.classList.remove('opacity-0', 'translate-y-12')
             element.classList.add('opacity-100', 'translate-y-0')
@@ -90,16 +90,16 @@ export default function ImageGallery() {
   if (loading) {
     return (
       <section className="pb-20 bg-white">
-        <div className="w-full px-16 sm:px-20 lg:px-32 xl:px-40">
+        <div className="w-full px-4 sm:px-20 lg:px-32 xl:px-40">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
+            <h2 className="text-2xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
               OUR WORKS
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-sm md:text-lg text-gray-600 max-w-2xl mx-auto">
               HOWDOYOUDO가 걸어온 발자취를 소개합니다.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 lg:gap-12">
             {Array.from({ length: 6 }).map((_, index) => (
               <div key={index} className="animate-pulse">
                 <div className="bg-gray-300 aspect-[4/5] rounded-2xl mb-6"></div>
@@ -119,15 +119,15 @@ export default function ImageGallery() {
   if (error) {
     return (
       <section className="pb-20 bg-white">
-        <div className="w-full px-16 sm:px-20 lg:px-32 xl:px-40">
+        <div className="w-full px-4 sm:px-20 lg:px-32 xl:px-40">
           <div className="text-center">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
               OUR WORKS
             </h2>
             <div className="text-center py-12">
               <p className="text-red-600 mb-4">Error loading works: {error}</p>
-              <button 
-                onClick={() => window.location.reload()} 
+              <button
+                onClick={() => window.location.reload()}
                 className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
               >
                 Try Again
@@ -141,20 +141,20 @@ export default function ImageGallery() {
 
   return (
     <section className="pb-20 bg-white">
-      <div className="w-full px-16 sm:px-20 lg:px-32 xl:px-40">
+      <div className="w-full px-4 sm:px-20 lg:px-32 xl:px-40">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
+          <h2 className="text-2xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
             OUR WORKS
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-sm md:text-lg text-gray-600 max-w-2xl mx-auto">
             HOWDOYOUDO가 걸어온 발자취를 소개합니다.
           </p>
         </div>
 
-        <div 
+        <div
           ref={galleryRef}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12"
+          className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 lg:gap-12"
         >
           {works.map((item) => {
             return (
@@ -172,13 +172,13 @@ export default function ImageGallery() {
                     className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
-                  
+
                   {/* Image overlay */}
                   <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  
+
                   {/* Category Badge */}
-                  <div className="absolute top-6 left-6 z-10">
-                    <span className="inline-block px-4 py-2 bg-white text-gray-900 text-xs font-semibold rounded-full tracking-wide shadow-md">
+                  <div className="absolute top-6 left-6 z-10 hidden sm:block">
+                    <span className="inline-block px-2 py-1 md:px-4 md:py-2 bg-white text-gray-900 text-[10px] md:text-xs font-semibold rounded-full tracking-wide shadow-md">
                       {item.categoryDisplayName}
                     </span>
                   </div>
@@ -186,11 +186,11 @@ export default function ImageGallery() {
                   {/* Hover Content */}
                   <div className="absolute inset-0 flex items-end p-6 z-10">
                     <div className="transform translate-y-6 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-100">
-                      <h3 className="text-xl font-bold text-white mb-2">
+                      <h3 className="text-base md:text-xl font-bold text-white mb-2">
                         {item.title}
                       </h3>
                       <p className="text-white/90 text-sm font-medium">
-                        {`${item.eventDate.slice(0,4)}.${item.eventDate.slice(5,7)}.${item.eventDate.slice(8,10)}`}
+                        {`${item.eventDate.slice(0, 4)}.${item.eventDate.slice(5, 7)}.${item.eventDate.slice(8, 10)}`}
                       </p>
                     </div>
                   </div>
@@ -202,7 +202,7 @@ export default function ImageGallery() {
                 {/* Text content below image */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-lg font-semibold text-gray-900 group-hover:text-gray-700 transition-colors duration-300">
+                    <h4 className="text-sm sm:text-md lg:text-lg font-semibold text-gray-900 group-hover:text-gray-700 transition-colors duration-300">
                       {item.title}
                     </h4>
                   </div>
@@ -216,13 +216,16 @@ export default function ImageGallery() {
         </div>
 
         {/* Load More Button */}
-        <div className="text-center mt-20">
-          <Link href="/works" className="group inline-flex items-center px-10 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-full hover:border-gray-900 hover:text-gray-900 hover:shadow-lg transition-all duration-300 tracking-wide">
+        <div className="text-center mt-12 md:mt-20">
+          <Link
+            href="/works"
+            className="group inline-flex items-center px-6 py-3 md:px-10 md:py-4 border-2 border-gray-300 text-gray-700 text-sm md:text-base font-semibold rounded-full hover:border-gray-900 hover:text-gray-900 hover:shadow-lg transition-all duration-300 tracking-wide"
+          >
             <span>VIEW ALL WORKS</span>
-            <svg 
-              className="ml-3 w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" 
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className="ml-2 md:ml-3 w-3 h-3 md:w-4 md:h-4 transform group-hover:translate-x-1 transition-transform duration-300"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />

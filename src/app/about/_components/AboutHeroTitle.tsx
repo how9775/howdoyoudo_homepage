@@ -68,14 +68,14 @@ const AboutHeroTitle: React.FC = () => {
         
         {/* Description */}
         <div
-          className={`max-w-3xl mx-auto space-y-3 sm:space-y-4 px-4
+          className={`max-w-3xl mx-auto space-y-3 sm:space-y-4 px-4 paper-font
             transition-all duration-1000 ease-out
             ${showDescription
               ? 'opacity-100 translate-y-0 blur-0'
               : 'opacity-0 translate-y-10 blur-md'
             }`}
         >
-          <p className="text-lg sm:text-xl md:text-2xl font-medium text-gray-700 leading-relaxed">
+          <p className="text-lg sm:text-xl md:text-2xl font-medium text-gray-700 leading-relaxed paper-font">
             HOWDOYOUDO
           </p>
           <p className="text-base sm:text-lg md:text-xl text-gray-600">
