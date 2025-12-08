@@ -14,10 +14,10 @@ export default async function ContactPage() {
         <PageHeader title='CONTACT US' description="오시는 길과 연락처" />
 
         {/* Main Contact Section */}
-        <main className="flex-1 container mx-auto px-4 py-16">
+        <main className="flex-1 container mx-auto px-4">
           <div className="flex flex-col lg:flex-row">
             {/* Left: Contact Information */}
-            <div className="lg:w-1/2 h-120 flex flex-col justify-center items-center bg-[#232225] text-white p-4 md:p-8">
+            <div className="lg:w-1/2 lg:h-120 flex flex-col items-center bg-[#232225] text-white px-3 pt-6 pb-4 sm:px-6 sm:pt-10 sm:pb-8 md:p-8 md:justify-center">
               {/* 연락처 정보 (Server Component) */}
               <ContactInfo contactInfo={contactInfo} />
               
