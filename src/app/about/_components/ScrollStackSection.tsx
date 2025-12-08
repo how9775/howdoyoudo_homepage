@@ -29,32 +29,51 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
     }
     
     checkMobile()
-    window.addEventListener('resize', checkMobile)
+    window.addEventListener('resize', checkMobile, { passive: true })
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  // 🚀 성능 최적화: requestAnimationFrame + passive listener
   useEffect(() => {
+    let rafId: number | null = null
+    let ticking = false
+
     const handleScroll = () => {
-      if (!sectionRef.current) return
+      if (!ticking) {
+        ticking = true
+        rafId = requestAnimationFrame(() => {
+          if (!sectionRef.current) {
+            ticking = false
+            return
+          }
 
-      const rect = sectionRef.current.getBoundingClientRect()
-      const sectionHeight = rect.height
-      const windowHeight = window.innerHeight
+          const rect = sectionRef.current.getBoundingClientRect()
+          const sectionHeight = rect.height
+          const windowHeight = window.innerHeight
 
-      const progress = Math.max(
-        0,
-        Math.min(
-          1,
-          (windowHeight - rect.top) / (sectionHeight + windowHeight)
-        )
-      )
+          const progress = Math.max(
+            0,
+            Math.min(
+              1,
+              (windowHeight - rect.top) / (sectionHeight + windowHeight)
+            )
+          )
 
-      setScrollProgress(progress)
+          setScrollProgress(progress)
+          ticking = false
+        })
+      }
     }
 
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
     handleScroll()
-    return () => window.removeEventListener('scroll', handleScroll)
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId)
+      }
+    }
   }, [])
 
   const getCardProgress = (cardIndex: number) => {
@@ -126,7 +145,8 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
               const slideY = (1 - appearProgress) * 300
               const finalY = stackOffsetY + slideY // 최종 Y 위치
               
-              transform = `translateY(${finalY}px)`
+              // 🚀 GPU 가속을 위한 translate3d 사용 (모바일만)
+              transform = `translate3d(0, ${finalY}px, 0)`
             } else {
               // 데스크톱: 오른쪽으로 스택
               const stackOffsetX = cardIndex * 80 - 70
@@ -150,11 +170,20 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
                   transform,
                   transition: 'none',
                   pointerEvents: 'none',
+                  // 🚀 GPU 가속 활성화 (활성 카드만, 애니메이션 중에만)
+                  willChange: isActive && appearProgress < 1 ? 'transform, opacity' : 'auto',
                 }}
               >
                 {isMobile ? (
                   /* 모바일: 타이틀바 + 카드를 하나의 박스로 */
-                  <div className="relative w-[90vw] h-[60vh] backdrop-blur-2xl bg-gradient-to-br from-white/70 via-white/90 to-white/70 border-2 border-white/70 shadow-[0_20px_80px_rgba(0,0,0,0.15)] rounded-2xl overflow-hidden flex flex-col">
+                  <div 
+                    className="relative w-[90vw] h-[60vh] bg-gradient-to-br from-white/70 via-white/90 to-white/70 border-2 border-white/70 shadow-[0_20px_80px_rgba(0,0,0,0.15)] rounded-2xl overflow-hidden flex flex-col"
+                    style={{
+                      // 🚀 모바일: backdrop-blur 강도 줄임 (24px → 8px)
+                      backdropFilter: 'blur(8px)',
+                      WebkitBackdropFilter: 'blur(8px)',
+                    }}
+                  >
                     {/* 타이틀바 */}
                     {isActive && (
                       <div 
@@ -179,7 +208,8 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
                     >
                       {/* 배경 효과 */}
                       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5" />
-                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 blur-2xl -z-10" />
+                      {/* 🚀 모바일: 배경 blur 제거 (성능 개선) */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 -z-10" />
 
                       {/* 타이틀 배경 */}
                       <div 
@@ -212,8 +242,11 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
                               className="relative"
                               style={{
                                 opacity: itemOpacity,
-                                transform: `translateY(${(1 - itemOpacity) * 15}px)`,
+                                // 🚀 GPU 가속을 위한 translate3d (모바일)
+                                transform: `translate3d(0, ${(1 - itemOpacity) * 15}px, 0)`,
                                 transition: 'none',
+                                // 🚀 애니메이션 중에만 will-change 적용 (모바일)
+                                willChange: itemOpacity > 0 && itemOpacity < 1 ? 'transform, opacity' : 'auto',
                               }}
                             >
                               {itemIndex < card.contents.length - 1 && (
@@ -245,13 +278,13 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
                         </div>
                       </div>
 
-                      {/* 장식 요소 */}
-                      <div className="absolute -top-2 -left-2 w-16 h-16 bg-gradient-to-br from-blue-500/20 to-transparent rounded-full blur-2xl pointer-events-none" />
-                      <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-gradient-to-br from-purple-500/20 to-transparent rounded-full blur-2xl pointer-events-none" />
+                      {/* 🚀 모바일: 장식 요소 blur 제거 (성능 개선) */}
+                      <div className="absolute -top-2 -left-2 w-16 h-16 bg-gradient-to-br from-blue-500/20 to-transparent rounded-full pointer-events-none" />
+                      <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-gradient-to-br from-purple-500/20 to-transparent rounded-full pointer-events-none" />
                     </div>
                   </div>
                 ) : (
-                  /* 데스크톱: 기존 레이아웃 */
+                  /* ==================== 데스크톱: 아래 코드는 절대 건드리지 않음 ==================== */
                   <div className="relative w-[85vw] h-[65vh] flex flex-row">
                     {/* 타이틀바 - 왼쪽 */}
                     {isActive && (
@@ -359,6 +392,7 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
                       <div className="absolute -bottom-4 -right-4 w-40 h-40 bg-gradient-to-br from-purple-500/20 to-transparent rounded-full blur-2xl pointer-events-none" />
                     </div>
                   </div>
+                  /* ==================== 데스크톱 코드 끝 ==================== */
                 )}
               </div>
             )
@@ -368,30 +402,38 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
           <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
             <div 
               className={`
-                absolute bg-blue-500/5 rounded-full blur-3xl
+                absolute bg-blue-500/5 rounded-full
                 ${isMobile 
                   ? 'top-1/4 -left-12 w-40 h-40' 
-                  : 'top-1/4 -left-32 w-96 h-96'
+                  : 'top-1/4 -left-32 w-96 h-96 blur-3xl'
                 }
               `}
               style={{
                 transform: isMobile
-                  ? `translateY(${scrollProgress * 30}px) scale(${1 + scrollProgress * 0.2})`
+                  // 🚀 모바일: translate3d로 GPU 가속
+                  ? `translate3d(0, ${scrollProgress * 30}px, 0) scale(${1 + scrollProgress * 0.2})`
                   : `translateX(${scrollProgress * 50}px) scale(${1 + scrollProgress * 0.2})`,
+                // 🚀 모바일: blur 제거 (성능 개선)
+                filter: isMobile ? 'none' : undefined,
+                willChange: 'transform',
               }}
             />
             <div 
               className={`
-                absolute bg-purple-500/5 rounded-full blur-3xl
+                absolute bg-purple-500/5 rounded-full
                 ${isMobile 
                   ? 'bottom-1/4 -right-12 w-48 h-48' 
-                  : 'bottom-1/4 -right-32 w-[30rem] h-[30rem]'
+                  : 'bottom-1/4 -right-32 w-[30rem] h-[30rem] blur-3xl'
                 }
               `}
               style={{
                 transform: isMobile
-                  ? `translateY(${-scrollProgress * 30}px) scale(${1 + scrollProgress * 0.2})`
+                  // 🚀 모바일: translate3d로 GPU 가속
+                  ? `translate3d(0, ${-scrollProgress * 30}px, 0) scale(${1 + scrollProgress * 0.2})`
                   : `translateX(${-scrollProgress * 50}px) scale(${1 + scrollProgress * 0.2})`,
+                // 🚀 모바일: blur 제거 (성능 개선)
+                filter: isMobile ? 'none' : undefined,
+                willChange: 'transform',
               }}
             />
           </div>
