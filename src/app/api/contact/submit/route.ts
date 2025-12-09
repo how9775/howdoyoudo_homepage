@@ -5,6 +5,14 @@ import { checkSubmissionLimit } from '@/lib/rateLimiter';
 import { validateContactForm, sanitizeInput, getClientIP } from '@/lib/validation';
 import { sendContactEmail, ContactFormData } from '@/lib/emailService';
 
+// CORS 헤더 설정
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Max-Age': '86400',
+};
+
 // R2 클라이언트 초기화
 const r2Client = new S3Client({
   region: 'auto',
@@ -48,6 +56,17 @@ async function getContactEmails(): Promise<string[]> {
   }
 }
 
+// OPTIONS 메서드 처리 (CORS preflight)
+export async function OPTIONS(request: NextRequest) {
+  return NextResponse.json(
+    {},
+    {
+      status: 200,
+      headers: corsHeaders,
+    }
+  );
+}
+
 export async function POST(request: NextRequest) {
   try {
     // 1. IP 주소 추출
@@ -62,7 +81,10 @@ export async function POST(request: NextRequest) {
           error: `너무 많은 요청이 발생했습니다. ${rateLimitResult.retryAfter}초 후에 다시 시도해주세요.`,
           retryAfter: rateLimitResult.retryAfter,
         },
-        { status: 429 }
+        { 
+          status: 429,
+          headers: corsHeaders,
+        }
       );
     }
 
@@ -78,7 +100,10 @@ export async function POST(request: NextRequest) {
           error: validation.errors[0],
           errors: validation.errors,
         },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: corsHeaders,
+        }
       );
     }
 
@@ -100,7 +125,10 @@ export async function POST(request: NextRequest) {
           success: false,
           error: '이메일 전송 설정이 완료되지 않았습니다. 관리자에게 문의해주세요.',
         },
-        { status: 500 }
+        { 
+          status: 500,
+          headers: corsHeaders,
+        }
       );
     }
 
@@ -114,15 +142,24 @@ export async function POST(request: NextRequest) {
           success: false,
           error: '이메일 전송에 실패했습니다. 잠시 후 다시 시도해주세요.',
         },
-        { status: 500 }
+        { 
+          status: 500,
+          headers: corsHeaders,
+        }
       );
     }
 
     // 8. 성공 응답
-    return NextResponse.json({
-      success: true,
-      message: '문의가 성공적으로 전송되었습니다. 빠른 시일 내에 답변드리겠습니다.',
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: '문의가 성공적으로 전송되었습니다. 빠른 시일 내에 답변드리겠습니다.',
+      },
+      {
+        status: 200,
+        headers: corsHeaders,
+      }
+    );
 
   } catch (error) {
     console.error('Contact form submission error:', error);
@@ -131,21 +168,10 @@ export async function POST(request: NextRequest) {
         success: false,
         error: '요청 처리 중 오류가 발생했습니다.',
       },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: corsHeaders,
+      }
     );
   }
-}
-
-// OPTIONS 메서드 처리 (CORS preflight)
-export async function OPTIONS() {
-  return NextResponse.json(
-    {},
-    {
-      status: 200,
-      headers: {
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-    }
-  );
 }
