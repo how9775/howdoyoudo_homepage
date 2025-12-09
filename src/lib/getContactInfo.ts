@@ -37,7 +37,6 @@ export async function getContactInfo(): Promise<ContactConfig> {
       }
 
       const config: ContactConfig = JSON.parse(body);
-      console.log('Contact 정보 로드됨:', config);
       return config;
     } catch (error: any) {
       // 파일이 없으면 기본값 반환

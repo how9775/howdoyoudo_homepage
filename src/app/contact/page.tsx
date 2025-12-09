@@ -4,6 +4,8 @@ import ContactInfo from "@/components/contact/ContactInfo";
 import SocialLinks from "@/components/contact/SocialLinks";
 import { getContactInfo } from "@/lib/getContactInfo";
 
+export const revalidate = 60;
+
 export default async function ContactPage() {
   // Server에서 Contact 정보 가져오기 (SSR)
   const contactInfo = await getContactInfo();
