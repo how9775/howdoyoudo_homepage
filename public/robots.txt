@@ -1,0 +1,41 @@
+# HOWDOYOUDO - Robots.txt
+# 구글, 네이버 검색엔진 최적화
+
+# 모든 검색엔진에 대한 기본 설정
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /_next/static/
+Disallow: /*.json$
+
+# 구글봇 특별 설정
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /api
+
+# 구글 이미지 검색
+User-agent: Googlebot-Image
+Allow: /
+Disallow: /admin
+
+# 네이버 검색봇 (Yeti)
+User-agent: Yeti
+Allow: /
+Disallow: /admin
+Disallow: /api
+
+# 네이버 이미지 검색
+User-agent: Yeti-Image
+Allow: /
+Disallow: /admin
+
+# 다음(Kakao) 검색봇
+User-agent: Daumoa
+Allow: /
+Disallow: /admin
+Disallow: /api
+
+# Sitemap 위치
+Sitemap: https://hdyd.co.kr/sitemap.xml

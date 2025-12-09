@@ -6,8 +6,8 @@ import PageHeader from '@/components/sections/PageHeader';
 export const metadata: Metadata = {
   description: 'SPACE & DISPLAY VMD, LAUNCHING SHOWCASE, PROMOTION EVENT, STAR MARKETING 등 하우두유두가 진행한 다양한 BTL 프로젝트를 확인하세요. Full-Covering System으로 제공되는 토탈 솔루션 사례를 소개합니다.',
   keywords: [
-    '포트폴리오', 
-    'BTL 프로젝트', 
+    '포트폴리오',
+    'BTL 프로젝트',
     '런칭쇼케이스',
     '프로모션 이벤트',
     'VMD',
@@ -20,6 +20,12 @@ export const metadata: Metadata = {
     title: 'Works | HOWDOYOUDO',
     description: 'BTL 영역의 다양한 프로젝트 포트폴리오',
     type: 'website',
+    images: {
+      url: '/howdoyoudo_siteImage.png.png',
+      width: 1200,
+      height: 630,
+      alt: 'HOWDOYOUDO Open Graph Image',
+    }
   }
 }
 

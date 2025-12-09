@@ -47,6 +47,12 @@ export const metadata: Metadata = {
     siteName: 'HOWDOYOUDO',
     title: 'HOWDOYOUDO | (주) 하우두유두',
     description: 'BTL 영역의 통합적인 프로모션 대행사',
+    images:{
+      url: '/howdoyoudo_siteImage.png.png',
+      width: 1200,
+      height: 630,
+      alt: 'HOWDOYOUDO Open Graph Image',
+    }
   },
   robots: {
     index: true,

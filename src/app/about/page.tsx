@@ -7,11 +7,11 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
   description: '하우두유두는 CONCEPT IDEA, COMMUNICATION, PROFESSIONAL의 가치로 고객이 목표하는 마케팅 성과를 위해 최적의 One Stop Service를 제공합니다. Proposals, Prepare, Action의 3단계 프로세스로 완벽한 이벤트를 실현합니다.',
   keywords: [
-    '회사 소개', 
-    '이벤트 프로세스', 
-    'One Stop Service', 
-    'CONCEPT IDEA', 
-    'COMMUNICATION', 
+    '회사 소개',
+    '이벤트 프로세스',
+    'One Stop Service',
+    'CONCEPT IDEA',
+    'COMMUNICATION',
     'PROFESSIONAL',
     '토탈 솔루션'
   ],
@@ -19,6 +19,12 @@ export const metadata: Metadata = {
     title: 'About | HOWDOYOUDO',
     description: '하우두유두의 서비스 프로세스 - Proposals, Prepare, Action',
     type: 'website',
+    images: {
+      url: '/howdoyoudo_siteImage.png.png',
+      width: 1200,
+      height: 630,
+      alt: 'HOWDOYOUDO Open Graph Image',
+    }
   }
 }
 

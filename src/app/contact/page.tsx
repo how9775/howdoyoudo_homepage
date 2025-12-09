@@ -11,9 +11,9 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   description: '하우두유두에 문의하세요. 서울시 금천구 벚꽃로 244 벽산디지털밸리 5차 712호에 위치하고 있습니다. BTL 마케팅, Corporate Event, Exhibition 등 통합 프로모션 서비스에 대해 상담해드립니다.',
   keywords: [
-    '문의', 
-    '연락처', 
-    '오시는 길', 
+    '문의',
+    '연락처',
+    '오시는 길',
     '벽산디지털밸리',
     '금천구',
     '상담',
@@ -24,6 +24,12 @@ export const metadata: Metadata = {
     title: 'Contact | HOWDOYOUDO',
     description: '하우두유두 연락처 및 오시는 길 - 서울시 금천구 벽산디지털밸리 5차',
     type: 'website',
+    images: {
+      url: '/howdoyoudo_siteImage.png.png',
+      width: 1200,
+      height: 630,
+      alt: 'HOWDOYOUDO Open Graph Image',
+    }
   }
 }
 
@@ -43,7 +49,7 @@ export default async function ContactPage() {
             <div className="lg:w-1/2 lg:h-120 flex flex-col items-center bg-[#232225] text-white px-3 pt-6 pb-4 sm:px-6 sm:pt-10 sm:pb-8 md:p-8 md:justify-center">
               {/* 연락처 정보 (Server Component) */}
               <ContactInfo contactInfo={contactInfo} />
-              
+
               {/* 소셜 링크 (Client Component) */}
               <SocialLinks />
             </div>
@@ -62,7 +68,7 @@ export default async function ContactPage() {
 
           {/* Contact Form Section */}
           <div className="mt-16">
-            <ContactForm/>
+            <ContactForm />
           </div>
         </main>
       </div>
