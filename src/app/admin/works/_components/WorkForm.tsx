@@ -7,6 +7,7 @@ import CategoryManager from './CategoryManager';
 import ImageUploader from './ImageUploader';
 import { Save, Loader2, Upload, X } from 'lucide-react';
 import Image from 'next/image';
+import { resizeImage, formatFileSize, isAllowedImageType } from '@/lib/imageUtils';
 
 interface ImageFile {
   file: File;
@@ -27,6 +28,10 @@ interface WorkFormProps {
   existingThumbnail?: string;
   existingImages?: string[];
 }
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const RESIZE_MAX_WIDTH = 1920;
+const RESIZE_MAX_HEIGHT = 1920;
 
 export default function WorkForm({
   initialData,
@@ -49,13 +54,18 @@ export default function WorkForm({
   const [keepExistingThumbnail, setKeepExistingThumbnail] = useState<string | null>(
     existingThumbnail || null
   );
+  const [thumbnailProcessing, setThumbnailProcessing] = useState(false);
 
   // 콘텐츠 이미지 관리
   const [newContentImages, setNewContentImages] = useState<ImageFile[]>([]);
   const [keepExistingImages, setKeepExistingImages] = useState<string[]>(existingImages);
 
   const [saving, setSaving] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<string>('');
+  const [uploadProgress, setUploadProgress] = useState<{
+    message: string;
+    current: number;
+    total: number;
+  } | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -67,32 +77,108 @@ export default function WorkForm({
     };
   }, [thumbnailFile, newContentImages]);
 
-  const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      alert('지원하지 않는 파일 형식입니다.');
+    if (!isAllowedImageType(file)) {
+      alert('지원하지 않는 파일 형식입니다. (JPG, PNG, WEBP만 가능)');
+      e.target.value = '';
       return;
     }
 
-    if (file.size > 50 * 1024 * 1024) {
-      alert('파일 크기는 50MB를 초과할 수 없습니다.');
-      return;
+    setThumbnailProcessing(true);
+
+    try {
+      let processedFile = file;
+
+      // 파일 크기 확인 및 리사이즈
+      if (file.size > MAX_FILE_SIZE) {
+        // 5MB 초과 시 리사이즈 시도
+        try {
+          const resizedBlob = await resizeImage(file, {
+            maxWidth: RESIZE_MAX_WIDTH,
+            maxHeight: RESIZE_MAX_HEIGHT,
+            quality: 0.85,
+            outputType: file.type as any,
+          });
+
+          // resizedBlob이 null이면 원본이 기준보다 작다는 의미
+          // 하지만 용량은 5MB 초과이므로 품질을 낮춰서 재시도
+          if (!resizedBlob) {
+            alert(
+              `이미지가 5MB를 초과합니다. (${formatFileSize(file.size)})\n더 작은 이미지를 선택해주세요.`
+            );
+            e.target.value = '';
+            return;
+          }
+
+          if (resizedBlob.size > MAX_FILE_SIZE) {
+            const resizedBlob2 = await resizeImage(file, {
+              maxWidth: RESIZE_MAX_WIDTH,
+              maxHeight: RESIZE_MAX_HEIGHT,
+              quality: 0.7,
+              outputType: 'image/jpeg',
+            });
+
+            if (!resizedBlob2 || resizedBlob2.size > MAX_FILE_SIZE) {
+              alert(
+                `이미지가 최적화 후에도 5MB를 초과합니다. (${formatFileSize(resizedBlob2?.size || file.size)})\n더 작은 이미지를 선택해주세요.`
+              );
+              e.target.value = '';
+              return;
+            }
+
+            processedFile = new File([resizedBlob2], file.name, {
+              type: 'image/jpeg',
+            });
+          } else {
+            processedFile = new File([resizedBlob], file.name, {
+              type: file.type,
+            });
+          }
+        } catch (error) {
+          console.error('이미지 리사이즈 실패:', error);
+          alert('이미지 처리 중 오류가 발생했습니다.');
+          e.target.value = '';
+          return;
+        }
+      } else {
+        // 5MB 이하면 크기만 체크해서 필요시 리사이즈
+        try {
+          const resizedBlob = await resizeImage(file, {
+            maxWidth: RESIZE_MAX_WIDTH,
+            maxHeight: RESIZE_MAX_HEIGHT,
+            quality: 0.85,
+            outputType: file.type as any,
+          });
+
+          // null이면 원본이 기준보다 작으므로 원본 사용
+          if (resizedBlob) {
+            processedFile = new File([resizedBlob], file.name, {
+              type: file.type,
+            });
+          }
+          // resizedBlob이 null이면 processedFile은 이미 원본 file로 설정되어 있음
+        } catch (error) {
+          console.error('이미지 리사이즈 실패:', error);
+          // 리사이즈 실패 시 원본 사용 (processedFile은 이미 원본)
+        }
+      }
+
+      if (thumbnailFile) {
+        URL.revokeObjectURL(thumbnailFile.preview);
+      }
+
+      setThumbnailFile({
+        file: processedFile,
+        preview: URL.createObjectURL(processedFile),
+      });
+      setKeepExistingThumbnail(null);
+    } finally {
+      setThumbnailProcessing(false);
+      e.target.value = '';
     }
-
-    if (thumbnailFile) {
-      URL.revokeObjectURL(thumbnailFile.preview);
-    }
-
-    setThumbnailFile({
-      file,
-      preview: URL.createObjectURL(file),
-    });
-    setKeepExistingThumbnail(null);
-
-    e.target.value = '';
   };
 
   const handleRemoveThumbnail = () => {
@@ -107,9 +193,15 @@ export default function WorkForm({
     setKeepExistingImages((prev) => prev.filter((img) => img !== url));
   };
 
-  const uploadImage = async (imageFile: ImageFile): Promise<string> => {
+  const uploadImage = async (imageFile: ImageFile, index: number, total: number): Promise<string> => {
     const formData = new FormData();
     formData.append('file', imageFile.file);
+
+    setUploadProgress({
+      message: `이미지 업로드 중... (${index + 1}/${total})`,
+      current: index + 1,
+      total,
+    });
 
     const response = await fetch('/api/admin/works/upload', {
       method: 'POST',
@@ -153,28 +245,33 @@ export default function WorkForm({
 
     setSaving(true);
     setError('');
-    setUploadProgress('');
+    setUploadProgress(null);
 
     try {
       let thumbnailUrl = keepExistingThumbnail || '';
       const newImageUrls: string[] = [];
 
+      const totalUploads = (thumbnailFile ? 1 : 0) + newContentImages.length;
+      let uploadIndex = 0;
+
       if (thumbnailFile) {
-        setUploadProgress('썸네일 업로드 중...');
-        thumbnailUrl = await uploadImage(thumbnailFile);
+        thumbnailUrl = await uploadImage(thumbnailFile, uploadIndex, totalUploads);
+        uploadIndex++;
       }
 
       if (newContentImages.length > 0) {
         for (let i = 0; i < newContentImages.length; i++) {
-          setUploadProgress(
-            `콘텐츠 이미지 업로드 중... (${i + 1}/${newContentImages.length})`
-          );
-          const url = await uploadImage(newContentImages[i]);
+          const url = await uploadImage(newContentImages[i], uploadIndex, totalUploads);
           newImageUrls.push(url);
+          uploadIndex++;
         }
       }
 
-      setUploadProgress('게시글 저장 중...');
+      setUploadProgress({
+        message: '게시글 저장 중...',
+        current: totalUploads,
+        total: totalUploads,
+      });
 
       const finalContentImages = [...keepExistingImages, ...newImageUrls];
 
@@ -182,20 +279,16 @@ export default function WorkForm({
         mode === 'create' ? '/api/admin/works' : `/api/admin/works/${workId}`;
       const method = mode === 'create' ? 'POST' : 'PUT';
 
-      const requestBody: any = {
-        title: formData.title.trim(),
-        categoryId: formData.categoryId,
-        description: formData.description.trim(),
-        eventDate: formData.eventDate,
-        thumbnailImage: thumbnailUrl,
-        contentImages: finalContentImages,
-        isActive: true, // 항상 true로 설정
-      };
-
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          thumbnailImage: thumbnailUrl,
+          contentImages: finalContentImages,
+        }),
       });
 
       const data = await response.json();
@@ -216,7 +309,7 @@ export default function WorkForm({
       setError(err.message || '저장 중 오류가 발생했습니다.');
     } finally {
       setSaving(false);
-      setUploadProgress('');
+      setUploadProgress(null);
     }
   };
 
@@ -232,9 +325,19 @@ export default function WorkForm({
 
       {uploadProgress && (
         <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-          <div className="flex items-center space-x-3">
-            <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
-            <p className="text-blue-800 text-sm font-medium">{uploadProgress}</p>
+          <div className="flex items-center space-x-3 mb-3">
+            <Loader2 className="w-5 h-5 text-blue-600 animate-spin flex-shrink-0" />
+            <p className="text-blue-800 text-sm font-medium">
+              {uploadProgress.message}
+            </p>
+          </div>
+          <div className="bg-blue-100 rounded-full h-2 overflow-hidden">
+            <div
+              className="bg-blue-600 h-full transition-all duration-300"
+              style={{
+                width: `${(uploadProgress.current / uploadProgress.total) * 100}%`,
+              }}
+            />
           </div>
         </div>
       )}
@@ -281,7 +384,29 @@ export default function WorkForm({
 
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">썸네일 이미지 *</label>
+        
+        {/* Info Box */}
+        <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-3">
+          <div className="flex items-start space-x-2 text-xs text-gray-600">
+            <span className="font-medium">ℹ️</span>
+            <div className="space-y-1">
+              <p>• 최대 용량: <span className="font-semibold text-gray-800">5MB</span> (초과 시 자동 최적화)</p>
+              <p>• 최대 크기: <span className="font-semibold text-gray-800">1920x1920px</span> (초과 시 리사이즈)</p>
+              <p>• 지원 형식: <span className="font-semibold text-gray-800">JPG, PNG, WEBP</span></p>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4">
+          {thumbnailProcessing && (
+            <div className="mb-4 bg-blue-50 border-2 border-blue-200 rounded-lg p-3">
+              <div className="flex items-center space-x-3">
+                <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
+                <p className="text-blue-800 text-xs font-medium">이미지 처리 중...</p>
+              </div>
+            </div>
+          )}
+
           {(thumbnailFile || keepExistingThumbnail) && (
             <div className="mb-4">
               <div className="relative w-full max-w-sm aspect-[4/5] rounded-lg overflow-hidden bg-gray-100">
@@ -292,6 +417,11 @@ export default function WorkForm({
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 400px"
                 />
+                {thumbnailFile && (
+                  <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
+                    {formatFileSize(thumbnailFile.file.size)}
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={handleRemoveThumbnail}
@@ -306,7 +436,11 @@ export default function WorkForm({
 
           <label
             htmlFor="thumbnail-upload"
-            className="flex items-center justify-center space-x-2 px-4 py-3 border-2 border-dashed border-blue-300 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+            className={`flex items-center justify-center space-x-2 px-4 py-3 border-2 border-dashed rounded-lg transition-colors ${
+              thumbnailProcessing || saving
+                ? 'border-gray-300 bg-gray-100 cursor-not-allowed'
+                : 'border-blue-300 bg-blue-50 cursor-pointer hover:bg-blue-100'
+            }`}
           >
             <Upload className="w-5 h-5 text-blue-600" />
             <span className="text-sm font-medium text-blue-600">
@@ -321,7 +455,7 @@ export default function WorkForm({
             accept="image/jpeg,image/jpg,image/png,image/webp"
             onChange={handleThumbnailSelect}
             className="hidden"
-            disabled={saving}
+            disabled={saving || thumbnailProcessing}
           />
         </div>
       </div>
@@ -350,7 +484,7 @@ export default function WorkForm({
                     sizes="(max-width: 768px) 50vw, 25vw"
                   />
 
-                  <div className="absolute top-2 right-2 w-6 h-6 bg-black/70 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                  <div className="absolute top-2 left-2 w-6 h-6 bg-black/70 text-white text-xs rounded-full flex items-center justify-center font-medium">
                     {index + 1}
                   </div>
 
@@ -386,12 +520,10 @@ export default function WorkForm({
         </div>
       </div>
 
-      {/* isActive 체크박스 제거됨 */}
-
       <div className="flex items-center space-x-4 pt-6 border-t-2 border-gray-200">
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || thumbnailProcessing}
           className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
         >
           {saving ? (
@@ -414,7 +546,7 @@ export default function WorkForm({
               router.push('/admin/works');
             }
           }}
-          disabled={saving}
+          disabled={saving || thumbnailProcessing}
           className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 font-medium transition-colors"
         >
           취소

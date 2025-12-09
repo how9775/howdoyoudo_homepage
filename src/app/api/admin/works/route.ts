@@ -1,81 +1,56 @@
+// src/app/api/admin/works/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabase';
-import { WorkItemDB } from '@/types/works';
+import { verifyToken } from '@/lib/jwt';
 
-// GET - 관리자용 works 조회 (페이징 + 필터)
+// GET - works 목록 조회
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
-    const categoryId = searchParams.get("categoryId");
-
-    const offset = (page - 1) * limit;
-
-    // 쿼리 빌더
-    let worksQuery = supabaseAdmin
-      .from("works")
-      .select(`
-        id,
-        title,
-        category_id,
-        description,
-        event_date,
-        thumbnail_image,
-        content_images,
-        view_count,
-        created_at,
-        updated_at,
-        work_categories (
-          display_name
-        )
-      `, { count: 'exact' });
-
-    // 카테고리 필터
-    if (categoryId && categoryId !== "all") {
-      worksQuery = worksQuery.eq("category_id", parseInt(categoryId));
-    }
-
-    // 정렬 및 페이지네이션
-    worksQuery = worksQuery
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    const { data: worksData, error: worksError, count: totalCount } = await worksQuery;
-
-    if (worksError) {
-      console.error("Supabase works query error:", worksError);
+    const token = request.cookies.get('admin_token')?.value;
+    if (!token || !verifyToken(token)) {
       return NextResponse.json(
-        { success: false, error: "Failed to load works data" },
-        { status: 500 }
+        { success: false, error: '인증이 필요합니다.' },
+        { status: 401 }
       );
     }
 
-    // Categories 조회
-    const { data: categoriesData } = await supabaseAdmin
-      .from("work_categories")
-      .select("*")
-      .eq("is_active", true)
-      .order("id", { ascending: true });
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const categoryId = searchParams.get('categoryId');
+    const offset = (page - 1) * limit;
 
-    // 데이터 변환
-    const transformedWorks = (worksData || []).map((work: any) => {
-      let contentImages: string[] = [];
-      if (typeof work.content_images === "string") {
-        try {
-          contentImages = JSON.parse(work.content_images);
-        } catch {
-          contentImages = [];
-        }
-      } else if (Array.isArray(work.content_images)) {
-        contentImages = work.content_images;
-      }
+    // 카테고리 필터 적용
+    let query = supabaseAdmin
+      .from('works')
+      .select('*, work_categories(display_name)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (categoryId && categoryId !== 'all') {
+      query = query.eq('category_id', parseInt(categoryId));
+    }
+
+    const { data: works, error, count: totalCount } = await query;
+
+    if (error) throw error;
+
+    // 카테고리 목록 조회
+    const { data: categoriesData } = await supabaseAdmin
+      .from('work_categories')
+      .select('*')
+      .order('display_name');
+
+    const transformedWorks = (works || []).map((work: any) => {
+      const contentImages = Array.isArray(work.content_images)
+        ? work.content_images
+        : [];
 
       return {
         id: work.id,
         title: work.title,
         categoryId: work.category_id,
-        categoryDisplayName: work.work_categories?.display_name ?? "",
+        categoryName: work.work_categories?.display_name || "",
         description: work.description,
         eventDate: work.event_date,
         thumbnailImage: work.thumbnail_image,
@@ -109,17 +84,26 @@ export async function GET(request: NextRequest) {
 // POST - 새 work 추가
 export async function POST(request: NextRequest) {
   try {
+    const token = request.cookies.get('admin_token')?.value;
+    if (!token || !verifyToken(token)) {
+      return NextResponse.json(
+        { success: false, error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const {
       title,
-      description,
+      description = '', // 선택사항
       categoryId,
       eventDate,
       thumbnailImage,
       contentImages = [],
     } = body;
 
-    if (!title || !description || !categoryId || !eventDate || !thumbnailImage) {
+    // 필수 필드 검증
+    if (!title || !categoryId || !eventDate || !thumbnailImage) {
       return NextResponse.json(
         { success: false, error: '필수 필드를 모두 입력해주세요.' },
         { status: 400 }

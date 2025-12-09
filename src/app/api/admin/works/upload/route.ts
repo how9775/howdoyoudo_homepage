@@ -1,3 +1,4 @@
+// src/app/api/admin/works/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
@@ -11,6 +12,8 @@ const r2Client = new S3Client({
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
   },
 });
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,10 +35,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 파일 크기 제한 (50MB)
-    if (file.size > 50 * 1024 * 1024) {
+    // 파일 크기 제한 (5MB)
+    if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { success: false, error: '파일 크기는 50MB를 초과할 수 없습니다.' },
+        { 
+          success: false, 
+          error: `파일 크기는 5MB를 초과할 수 없습니다. (현재: ${(file.size / 1024 / 1024).toFixed(2)}MB)` 
+        },
         { status: 400 }
       );
     }
@@ -44,7 +50,7 @@ export async function POST(request: NextRequest) {
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { success: false, error: '지원하지 않는 파일 형식입니다.' },
+        { success: false, error: '지원하지 않는 파일 형식입니다. (JPG, PNG, WEBP만 가능)' },
         { status: 400 }
       );
     }
@@ -71,12 +77,8 @@ export async function POST(request: NextRequest) {
 
     await r2Client.send(uploadCommand);
 
-    // 공개 URL 생성 (R2 Public Bucket 또는 Custom Domain 사용)
-    // 옵션 1: R2 Public Bucket URL
-    // const fileUrl = `https://pub-<bucket-id>.r2.dev/${r2Path}`;
     
-    // 옵션 2: Custom Domain 사용 (권장)
-    const publicDomain = process.env.R2_PUBLIC_DOMAIN || ''; // 예: https://cdn.yourdomain.com
+    const publicDomain = process.env.R2_PUBLIC_DOMAIN || '';
     const fileUrl = `${publicDomain}/${r2Path}`;
 
     return NextResponse.json({
@@ -85,6 +87,7 @@ export async function POST(request: NextRequest) {
         url: fileUrl,
         filename: filename,
         path: r2Path,
+        size: file.size,
       },
     });
   } catch (error) {
