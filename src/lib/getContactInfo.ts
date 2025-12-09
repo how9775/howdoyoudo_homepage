@@ -1,5 +1,4 @@
-import fs from 'fs/promises';
-import path from 'path';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
 export interface ContactConfig {
   address: string;
@@ -8,26 +7,50 @@ export interface ContactConfig {
   fax: string;
 }
 
-const CONFIG_PATH = path.join(process.cwd(), 'data', 'contact.config.json');
+// R2 클라이언트 초기화
+const r2Client = new S3Client({
+  region: 'auto',
+  endpoint: process.env.R2_ENDPOINT,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+  },
+});
+
+const bucketName = process.env.R2_BUCKET_NAME || '';
+const configKey = 'howdoyoudo/files/config/contact.config.json';
 
 export async function getContactInfo(): Promise<ContactConfig> {
   try {
-    // 파일 존재 여부 확인
+    // R2에서 config 파일 가져오기
     try {
-      await fs.access(CONFIG_PATH);
-    } catch {
-      // 파일이 없으면 기본값 반환
-      return {
-        address: '',
-        emails: [],
-        phone: '',
-        fax: '',
-      };
-    }
+      const response = await r2Client.send(
+        new GetObjectCommand({
+          Bucket: bucketName,
+          Key: configKey,
+        })
+      );
 
-    const fileContent = await fs.readFile(CONFIG_PATH, 'utf-8');
-    const config: ContactConfig = JSON.parse(fileContent);
-    return config;
+      const body = await response.Body?.transformToString();
+      if (!body) {
+        throw new Error('Empty response');
+      }
+
+      const config: ContactConfig = JSON.parse(body);
+      console.log('Contact 정보 로드됨:', config);
+      return config;
+    } catch (error: any) {
+      // 파일이 없으면 기본값 반환
+      if (error.name === 'NoSuchKey' || error.$metadata?.httpStatusCode === 404) {
+        return {
+          address: '',
+          emails: [],
+          phone: '',
+          fax: '',
+        };
+      }
+      throw error;
+    }
   } catch (error) {
     console.error('Contact 정보 로드 오류:', error);
     // 에러 발생 시 기본값 반환

@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 
-const CONFIG_PATH = path.join(process.cwd(), 'data', 'contact.config.json');
+// R2 클라이언트 초기화
+const r2Client = new S3Client({
+  region: 'auto',
+  endpoint: process.env.R2_ENDPOINT,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+  },
+});
+
+const bucketName = process.env.R2_BUCKET_NAME || '';
+const configKey = 'howdoyoudo/files/config/contact.config.json';
+
 interface ContactConfig {
   address: string;
   emails: string[];
@@ -13,31 +24,41 @@ interface ContactConfig {
 // GET: Contact 정보 조회
 export async function GET() {
   try {
-    // 파일 존재 여부 확인
+    // R2에서 config 파일 가져오기
     try {
-      await fs.access(CONFIG_PATH);
-    } catch {
-      // 파일이 없으면 기본값 생성
-      const defaultConfig: ContactConfig = {
-        address: '',
-        emails: [],
-        phone: '',
-        fax: '',
-      };
-      await fs.writeFile(CONFIG_PATH, JSON.stringify(defaultConfig, null, 2), 'utf-8');
+      const response = await r2Client.send(
+        new GetObjectCommand({
+          Bucket: bucketName,
+          Key: configKey,
+        })
+      );
+
+      const body = await response.Body?.transformToString();
+      if (!body) {
+        throw new Error('Empty response');
+      }
+
+      const config: ContactConfig = JSON.parse(body);
       return NextResponse.json({
         success: true,
-        data: defaultConfig,
+        data: config,
       });
+    } catch (error: any) {
+      // 파일이 없으면 기본값 반환
+      if (error.name === 'NoSuchKey' || error.$metadata?.httpStatusCode === 404) {
+        const defaultConfig: ContactConfig = {
+          address: '',
+          emails: [],
+          phone: '',
+          fax: '',
+        };
+        return NextResponse.json({
+          success: true,
+          data: defaultConfig,
+        });
+      }
+      throw error;
     }
-
-    const fileContent = await fs.readFile(CONFIG_PATH, 'utf-8');
-    const config: ContactConfig = JSON.parse(fileContent);
-
-    return NextResponse.json({
-      success: true,
-      data: config,
-    });
   } catch (error) {
     console.error('Contact 정보 조회 오류:', error);
     return NextResponse.json(
@@ -108,7 +129,15 @@ export async function POST(request: NextRequest) {
       fax: fax ? fax.trim() : '',
     };
 
-    await fs.writeFile(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
+    // R2에 저장
+    await r2Client.send(
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: configKey,
+        Body: JSON.stringify(config, null, 2),
+        ContentType: 'application/json',
+      })
+    );
 
     return NextResponse.json({
       success: true,
