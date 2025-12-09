@@ -3,6 +3,7 @@ import KakaoMap from "@/components/ui/KakaoMap";
 import ContactInfo from "@/components/contact/ContactInfo";
 import SocialLinks from "@/components/contact/SocialLinks";
 import { getContactInfo } from "@/lib/getContactInfo";
+import ContactForm from "@/components/contact/ContactForm";
 
 export const revalidate = 60;
 
@@ -37,6 +38,11 @@ export default async function ContactPage() {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Contact Form Section */}
+          <div className="mt-16">
+            <ContactForm/>
           </div>
         </main>
       </div>
