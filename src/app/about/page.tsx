@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     description: '하우두유두의 서비스 프로세스 - Proposals, Prepare, Action',
     type: 'website',
     images: {
-      url: '/howdoyoudo_siteImage.png.png',
+      url: '/howdoyoudo_siteImage.png',
       width: 1200,
       height: 630,
       alt: 'HOWDOYOUDO Open Graph Image',

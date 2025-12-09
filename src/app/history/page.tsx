@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     description: '2005년부터 20년간의 하우두유두 연혁과 주요 프로젝트',
     type: 'website',
     images: {
-      url: '/howdoyoudo_siteImage.png.png',
+      url: '/howdoyoudo_siteImage.png',
       width: 1200,
       height: 630,
       alt: 'HOWDOYOUDO Open Graph Image',

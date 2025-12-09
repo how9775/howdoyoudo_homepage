@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     description: '하우두유두 연락처 및 오시는 길 - 서울시 금천구 벽산디지털밸리 5차',
     type: 'website',
     images: {
-      url: '/howdoyoudo_siteImage.png.png',
+      url: '/howdoyoudo_siteImage.png',
       width: 1200,
       height: 630,
       alt: 'HOWDOYOUDO Open Graph Image',

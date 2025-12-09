@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     description: 'BTL 영역의 다양한 프로젝트 포트폴리오',
     type: 'website',
     images: {
-      url: '/howdoyoudo_siteImage.png.png',
+      url: '/howdoyoudo_siteImage.png',
       width: 1200,
       height: 630,
       alt: 'HOWDOYOUDO Open Graph Image',
