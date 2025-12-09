@@ -64,6 +64,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${inter.variable} scroll-smooth`}>
       <meta name="google-site-verification" content="MDRnz_SzdLL3DgbQ8kz9fIMS-B8BiDqaQCOl9EfHQVY" />
+      <meta name="naver-site-verification" content="80f4df43f6a8b24c6296aa1f5ed1eea4146d488e" />
       <body className="font-sans antialiased bg-gray-50 text-gray-900">
           <div className="min-h-screen">
             <Header />
