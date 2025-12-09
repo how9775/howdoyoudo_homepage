@@ -4,8 +4,28 @@ import ContactInfo from "@/components/contact/ContactInfo";
 import SocialLinks from "@/components/contact/SocialLinks";
 import { getContactInfo } from "@/lib/getContactInfo";
 import ContactForm from "@/components/contact/ContactForm";
+import { Metadata } from "next";
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  description: '하우두유두에 문의하세요. 서울시 금천구 벚꽃로 244 벽산디지털밸리 5차 712호에 위치하고 있습니다. BTL 마케팅, Corporate Event, Exhibition 등 통합 프로모션 서비스에 대해 상담해드립니다.',
+  keywords: [
+    '문의', 
+    '연락처', 
+    '오시는 길', 
+    '벽산디지털밸리',
+    '금천구',
+    '상담',
+    'BTL 마케팅 상담',
+    '이벤트 문의'
+  ],
+  openGraph: {
+    title: 'Contact | HOWDOYOUDO',
+    description: '하우두유두 연락처 및 오시는 길 - 서울시 금천구 벽산디지털밸리 5차',
+    type: 'website',
+  }
+}
 
 export default async function ContactPage() {
   // Server에서 Contact 정보 가져오기 (SSR)

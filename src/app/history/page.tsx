@@ -1,12 +1,24 @@
-// src/app/history/page.tsx
 import { Metadata } from 'next'
 import Divider from '@/components/ui/Divider';
 import PageHeader from '@/components/sections/PageHeader';
 import { getHistoryData } from '@/lib/history';
 
 export const metadata: Metadata = {
-  title: 'History',
-  description: 'HOWDOYOUDO의 연혁과 주요 프로젝트 기록'
+  description: '2005년 설립(사업장 2003년 설립)부터 현재까지, HOWDOYOUDO가 걸어온 20년의 발자취와 함께한 브랜드들의 특별한 순간들을 기록합니다.',
+  keywords: [
+    '연혁', 
+    '히스토리', 
+    '회사 역사', 
+    '2005년 설립',
+    '20년 경험',
+    '프로젝트 기록',
+    '브랜드 히스토리'
+  ],
+  openGraph: {
+    title: 'History | HOWDOYOUDO',
+    description: '2005년부터 20년간의 하우두유두 연혁과 주요 프로젝트',
+    type: 'website',
+  }
 }
 
 export default async function HistoryPage() {
