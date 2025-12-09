@@ -1,6 +1,3 @@
-// src/lib/validation.ts
-import DOMPurify from 'isomorphic-dompurify';
-
 export interface ValidationResult {
   isValid: boolean;
   errors: string[];
@@ -14,23 +11,35 @@ const NAME_REGEX = /^[가-힣a-zA-Z\s]+$/;
 
 // 허용된 카테고리 목록
 const ALLOWED_CATEGORIES = [
+  '행사 문의',
   '일반 문의',
-  '제품 문의',
-  '기술 지원',
-  '제휴 문의',
-  '채용 문의',
-  '기타',
+  '기타'
 ];
 
+// 간단한 HTML/스크립트 제거 (DOMPurify 대체)
 export function sanitizeInput(input: string): string {
-  // HTML 태그 제거 및 XSS 방지
-  const cleaned = DOMPurify.sanitize(input, { 
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: [] 
-  });
+  if (!input) return '';
   
-  // 연속된 공백을 하나로
-  return cleaned.trim().replace(/\s+/g, ' ');
+  let sanitized = input;
+  
+  // 1. HTML 태그 제거
+  sanitized = sanitized.replace(/<[^>]*>/g, '');
+  
+  // 2. 스크립트 관련 문자열 제거
+  sanitized = sanitized.replace(/javascript:/gi, '');
+  sanitized = sanitized.replace(/on\w+\s*=/gi, '');
+  
+  // 3. 특수 HTML 엔티티 제거
+  sanitized = sanitized.replace(/&lt;/g, '');
+  sanitized = sanitized.replace(/&gt;/g, '');
+  sanitized = sanitized.replace(/&quot;/g, '');
+  sanitized = sanitized.replace(/&#/g, '');
+  
+  // 4. 연속된 공백을 하나로
+  sanitized = sanitized.replace(/\s+/g, ' ');
+  
+  // 5. 앞뒤 공백 제거
+  return sanitized.trim();
 }
 
 export function validateContactForm(data: {
