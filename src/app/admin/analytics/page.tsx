@@ -1,419 +1,295 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { TrendingUp, Users, Eye, Clock, Loader2, BarChart3, Link as LinkIcon, Search, LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  MousePointerClick, Eye, TrendingUp, Search,
+  Loader2, AlertCircle, BarChart3, Link as LinkIcon,
+} from 'lucide-react';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, Legend, ResponsiveContainer,
+} from 'recharts';
 
-interface AnalyticsData {
-  metrics: {
-    activeUsers: { value: string; change: number };
-    pageViews: { value: string; change: number };
-    avgSessionDuration: { value: string; change: number };
-    bounceRate: { value: string; change: number };
-  };
-  topPages: Array<{
-    path: string;
-    title: string;
-    views: string;
-    users: string;
-  }>;
-  referrers: Array<{
-    source: string;
-    sessions: string;
-    percentage: number;
-  }>;
-  searchKeywords: Array<{
-    keyword: string;
-    clicks: string;
-    impressions: string;
-  }>;
-  dailyStats: Array<{
-    date: string;
-    views: number;
-    users: number;
-  }>;
+// ─── 타입 ────────────────────────────────────────────────
+
+interface GoogleSummary {
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
 }
 
-interface AdminInfo {
-  username: string;
-  name: string;
+interface DailyStat {
+  date: string;
+  clicks: number;
+  impressions: number;
 }
+
+interface TopQuery {
+  query: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+interface TopPage {
+  page: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+interface GoogleData {
+  summary: GoogleSummary;
+  dailyStats: DailyStat[];
+  topQueries: TopQuery[];
+  topPages: TopPage[];
+}
+
+type DateRange = '7daysAgo' | '30daysAgo' | '90daysAgo';
+
+// ─── 유틸 ────────────────────────────────────────────────
+
+const fmt = (n: number) => n.toLocaleString('ko-KR');
+const fmtCtr = (v: number) => `${(v * 100).toFixed(1)}%`;
+const fmtPos = (v: number) => v.toFixed(1);
+
+// ─── 공통 컴포넌트 ────────────────────────────────────────
+
+function MetricCard({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-5">
+      <div className="text-gray-400 mb-3">{icon}</div>
+      <p className="text-gray-500 text-sm mb-1">{label}</p>
+      <p className="text-2xl font-bold text-gray-900">{value}</p>
+    </div>
+  );
+}
+
+function SectionCard({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200">
+        <span className="text-gray-400">{icon}</span>
+        <h2 className="text-sm font-bold text-gray-900">{title}</h2>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Th({ children, right }: { children: React.ReactNode; right?: boolean }) {
+  return (
+    <th className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${right ? 'text-right' : 'text-left'}`}>
+      {children}
+    </th>
+  );
+}
+
+function NotConfigured() {
+  return (
+    <div className="bg-amber-50 border border-amber-200 rounded-lg p-5">
+      <div className="flex items-start gap-3">
+        <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+        <div>
+          <p className="font-semibold text-amber-800 mb-2">환경 변수 설정이 필요합니다</p>
+          <p className="text-sm text-amber-700 mb-3">Vercel → Settings → Environment Variables에 추가하세요.</p>
+          <div className="space-y-1 mb-3">
+            {['GOOGLE_SC_SITE_URL', 'GA_CLIENT_EMAIL', 'GA_PRIVATE_KEY'].map((k) => (
+              <div key={k} className="text-xs font-mono bg-amber-100 text-amber-900 px-2 py-1 rounded">{k}</div>
+            ))}
+          </div>
+          <p className="text-xs text-amber-600">
+            Google Cloud Console에서 서비스 계정을 생성하고, Search Console에 뷰어 권한을 부여하세요.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ApiError() {
+  return (
+    <div className="bg-red-50 border border-red-200 rounded-lg p-5">
+      <div className="flex items-center gap-2">
+        <AlertCircle className="w-5 h-5 text-red-500" />
+        <p className="font-medium text-red-700">데이터를 불러오지 못했습니다</p>
+      </div>
+      <p className="text-sm text-red-500 mt-1">API 설정 및 권한을 확인하세요.</p>
+    </div>
+  );
+}
+
+// ─── 메인 페이지 ─────────────────────────────────────────
 
 export default function AnalyticsPage() {
-  const router = useRouter();
-  const [dateRange, setDateRange] = useState('7daysAgo');
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState<DateRange>('7daysAgo');
+  const [data, setData] = useState<GoogleData | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [adminInfo, setAdminInfo] = useState<AdminInfo | null>(null);
 
-  useEffect(() => {
-    // 관리자 정보 가져오기
-    const fetchAdminInfo = async () => {
-      try {
-        const response = await fetch('/api/admin/me');
-        if (response.ok) {
-          const data = await response.json();
-          setAdminInfo(data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch admin info:', error);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/admin/analytics/google?dateRange=${dateRange}`);
+      const json = await res.json();
+
+      if (!res.ok) {
+        setError(json.error || 'API_ERROR');
+        return;
       }
-    };
 
-    fetchAdminInfo();
-    loadDummyData();
+      setData(json);
+    } catch {
+      setError('API_ERROR');
+    } finally {
+      setLoading(false);
+    }
   }, [dateRange]);
 
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/admin/logout', { method: 'POST' });
-      router.push('/admin/login');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const loadDummyData = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setData({
-        metrics: {
-          activeUsers: { value: '1234', change: 12.5 },
-          pageViews: { value: '3456', change: 8.2 },
-          avgSessionDuration: { value: '154', change: -3.1 },
-          bounceRate: { value: '0.423', change: -5.4 },
-        },
-        topPages: [
-          { path: '/', title: '홈', views: '1234', users: '890' },
-          { path: '/works', title: '작업물', views: '892', users: '654' },
-          { path: '/about', title: '소개', views: '567', users: '432' },
-          { path: '/contact', title: '문의', views: '423', users: '321' },
-          { path: '/history', title: '연혁', views: '345', users: '234' },
-        ],
-        referrers: [
-          { source: 'google.com', sessions: '567', percentage: 45.2 },
-          { source: 'naver.com', sessions: '342', percentage: 27.3 },
-          { source: 'instagram.com', sessions: '189', percentage: 15.1 },
-          { source: '직접 접속', sessions: '154', percentage: 12.4 },
-        ],
-        searchKeywords: [
-          { keyword: '크리에이티브 에이전시', clicks: '123', impressions: '1234' },
-          { keyword: '브랜딩 디자인', clicks: '89', impressions: '892' },
-          { keyword: '하우두유두', clicks: '67', impressions: '567' },
-          { keyword: '포트폴리오', clicks: '45', impressions: '423' },
-        ],
-        dailyStats: [
-          { date: '11/24', views: 456, users: 234 },
-          { date: '11/25', views: 523, users: 267 },
-          { date: '11/26', views: 489, users: 245 },
-          { date: '11/27', views: 612, users: 298 },
-          { date: '11/28', views: 578, users: 276 },
-          { date: '11/29', views: 645, users: 312 },
-          { date: '11/30', views: 692, users: 334 },
-        ],
-      });
-      setLoading(false);
-    }, 500);
-  };
-
-  const formatDuration = (seconds: string) => {
-    const sec = parseInt(seconds);
-    const minutes = Math.floor(sec / 60);
-    const remainingSeconds = sec % 60;
-    return `${minutes}분 ${remainingSeconds}초`;
-  };
-
-  const formatNumber = (num: string) => {
-    return parseInt(num).toLocaleString();
-  };
-
-  const maxViews = data ? Math.max(...data.dailyStats.map(d => d.views)) : 0;
+  const dateRangeOptions: { value: DateRange; label: string }[] = [
+    { value: '7daysAgo', label: '최근 7일' },
+    { value: '30daysAgo', label: '최근 30일' },
+    { value: '90daysAgo', label: '최근 90일' },
+  ];
 
   return (
     <div className="min-h-screen">
-
-      {/* Main Content - Dashboard와 동일한 max-width */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* 날짜 범위 선택 */}
+
+        {/* 날짜 필터 */}
         <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setDateRange('7daysAgo')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              dateRange === '7daysAgo'
-                ? 'bg-black text-white'
-                : 'bg-white border border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            최근 7일
-          </button>
-          <button
-            onClick={() => setDateRange('30daysAgo')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              dateRange === '30daysAgo'
-                ? 'bg-black text-white'
-                : 'bg-white border border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            최근 30일
-          </button>
-          <button
-            onClick={() => setDateRange('90daysAgo')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              dateRange === '90daysAgo'
-                ? 'bg-black text-white'
-                : 'bg-white border border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            최근 90일
-          </button>
+          {dateRangeOptions.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setDateRange(opt.value)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                dateRange === opt.value
+                  ? 'bg-black text-white'
+                  : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
 
+        {/* 로딩 */}
         {loading && (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+          <div className="flex items-center justify-center py-24">
+            <Loader2 className="w-7 h-7 animate-spin text-gray-400" />
           </div>
         )}
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
-            <p className="text-red-600 font-medium">{error}</p>
-            <p className="text-sm text-red-500 mt-2">
-              Google Analytics API 설정을 확인하세요
-            </p>
-          </div>
-        )}
+        {/* 에러 */}
+        {!loading && error === 'SC_NOT_CONFIGURED' && <NotConfigured />}
+        {!loading && error && error !== 'SC_NOT_CONFIGURED' && <ApiError />}
 
+        {/* 콘텐츠 */}
         {!loading && !error && data && (
-          <>
-            {/* 주요 지표 카드 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              {/* 총 방문자 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <span className={`text-sm font-medium ${
-                    data.metrics.activeUsers.change >= 0 ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {data.metrics.activeUsers.change >= 0 ? '+' : ''}{data.metrics.activeUsers.change.toFixed(1)}%
-                  </span>
-                </div>
-                <p className="text-gray-600 text-sm mb-1">총 방문자</p>
-                <p className="text-2xl font-bold">{formatNumber(data.metrics.activeUsers.value)}</p>
-              </div>
-
-              {/* 페이지뷰 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <span className={`text-sm font-medium ${
-                    data.metrics.pageViews.change >= 0 ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {data.metrics.pageViews.change >= 0 ? '+' : ''}{data.metrics.pageViews.change.toFixed(1)}%
-                  </span>
-                </div>
-                <p className="text-gray-600 text-sm mb-1">페이지뷰</p>
-                <p className="text-2xl font-bold">{formatNumber(data.metrics.pageViews.value)}</p>
-              </div>
-
-              {/* 평균 세션 시간 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <span className={`text-sm font-medium ${
-                    data.metrics.avgSessionDuration.change >= 0 ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {data.metrics.avgSessionDuration.change >= 0 ? '+' : ''}{data.metrics.avgSessionDuration.change.toFixed(1)}%
-                  </span>
-                </div>
-                <p className="text-gray-600 text-sm mb-1">평균 세션 시간</p>
-                <p className="text-2xl font-bold">{formatDuration(data.metrics.avgSessionDuration.value)}</p>
-              </div>
-
-              {/* 이탈률 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <span className={`text-sm font-medium ${
-                    data.metrics.bounceRate.change < 0 ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {data.metrics.bounceRate.change >= 0 ? '+' : ''}{data.metrics.bounceRate.change.toFixed(1)}%
-                  </span>
-                </div>
-                <p className="text-gray-600 text-sm mb-1">이탈률</p>
-                <p className="text-2xl font-bold">{(parseFloat(data.metrics.bounceRate.value) * 100).toFixed(1)}%</p>
-              </div>
+          <div className="space-y-6">
+            {/* 요약 카드 */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <MetricCard label="총 클릭" value={fmt(data.summary.clicks)} icon={<MousePointerClick className="w-4 h-4" />} />
+              <MetricCard label="총 노출" value={fmt(data.summary.impressions)} icon={<Eye className="w-4 h-4" />} />
+              <MetricCard label="평균 CTR" value={fmtCtr(data.summary.ctr)} icon={<TrendingUp className="w-4 h-4" />} />
+              <MetricCard label="평균 순위" value={fmtPos(data.summary.position)} icon={<BarChart3 className="w-4 h-4" />} />
             </div>
 
-            {/* 꺾은선 그래프 */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <BarChart3 className="w-5 h-5 text-gray-700" />
-                <h2 className="text-lg font-bold">방문 추이</h2>
+            {/* 일별 추이 */}
+            <SectionCard title="클릭 · 노출 추이" icon={<BarChart3 className="w-4 h-4" />}>
+              <div className="p-4 h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={data.dailyStats}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="date" stroke="#6b7280" fontSize={11} tickLine={false} />
+                    <YAxis stroke="#6b7280" fontSize={11} tickLine={false} />
+                    <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px' }} />
+                    <Legend wrapperStyle={{ fontSize: '12px' }} />
+                    <Line type="monotone" dataKey="clicks" name="클릭" stroke="#111827" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="impressions" name="노출" stroke="#3b82f6" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
-              <div className="h-64 flex items-end gap-2">
-                {data.dailyStats.map((stat, index) => (
-                  <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                    <div className="w-full flex flex-col items-center gap-1">
-                      <div className="text-xs text-gray-500 font-medium">{stat.views}</div>
-                      <div
-                        className="w-2 bg-gradient-to-t from-blue-500 to-blue-400 rounded-t transition-all duration-500 hover:from-blue-600 hover:to-blue-500"
-                        style={{ height: `${(stat.views / maxViews) * 200}px`, minHeight: '20px' }}
-                      />
-                    </div>
-                    <div className="text-xs text-gray-600">{stat.date}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 flex items-center justify-center gap-6">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">페이지뷰</span>
-                </div>
-              </div>
-            </div>
+            </SectionCard>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* 페이지별 접속 통계 */}
-              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                <div className="p-4 border-b border-gray-200">
-                  <h2 className="text-lg font-bold">페이지별 접속 통계</h2>
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* 검색 키워드 */}
+              <SectionCard title="검색 키워드" icon={<Search className="w-4 h-4" />}>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          페이지
-                        </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                          조회수
-                        </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                          방문자
-                        </th>
+                        <Th>키워드</Th>
+                        <Th right>클릭</Th>
+                        <Th right>노출</Th>
+                        <Th right>CTR</Th>
+                        <Th right>순위</Th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {data.topPages.map((page, index) => (
-                        <tr key={index} className="hover:bg-gray-50 transition-colors">
+                    <tbody className="divide-y divide-gray-100">
+                      {data.topQueries.length > 0 ? data.topQueries.map((q, i) => (
+                        <tr key={i} className="hover:bg-gray-50 transition-colors">
                           <td className="px-4 py-3">
-                            <div className="font-medium text-gray-900">{page.title}</div>
-                            <div className="text-sm text-gray-500">{page.path}</div>
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Eye className="w-4 h-4 text-gray-400" />
-                              <span className="font-medium">{formatNumber(page.views)}</span>
+                            <div className="flex items-center gap-2">
+                              <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                              <span className="text-sm font-medium text-gray-900">{q.query}</span>
                             </div>
                           </td>
+                          <td className="px-4 py-3 text-right text-sm font-medium">{fmt(q.clicks)}</td>
+                          <td className="px-4 py-3 text-right text-sm text-gray-500">{fmt(q.impressions)}</td>
                           <td className="px-4 py-3 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Users className="w-4 h-4 text-gray-400" />
-                              <span className="font-medium">{formatNumber(page.users)}</span>
-                            </div>
+                            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">{fmtCtr(q.ctr)}</span>
                           </td>
+                          <td className="px-4 py-3 text-right text-sm text-gray-500">{fmtPos(q.position)}</td>
                         </tr>
-                      ))}
+                      )) : (
+                        <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-400">데이터가 없습니다</td></tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
-              </div>
+              </SectionCard>
 
-              {/* 접속 경로 */}
-              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                <div className="p-4 border-b border-gray-200">
-                  <h2 className="text-lg font-bold">접속 경로</h2>
-                </div>
+              {/* 인기 페이지 */}
+              <SectionCard title="인기 페이지" icon={<LinkIcon className="w-4 h-4" />}>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          소스
-                        </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                          세션
-                        </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                          비율
-                        </th>
+                        <Th>페이지</Th>
+                        <Th right>클릭</Th>
+                        <Th right>노출</Th>
+                        <Th right>CTR</Th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {data.referrers.map((referrer, index) => (
-                        <tr key={index} className="hover:bg-gray-50 transition-colors">
+                    <tbody className="divide-y divide-gray-100">
+                      {data.topPages.length > 0 ? data.topPages.map((p, i) => (
+                        <tr key={i} className="hover:bg-gray-50 transition-colors">
                           <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <LinkIcon className="w-4 h-4 text-gray-400" />
-                              <span className="font-medium text-gray-900">{referrer.source}</span>
-                            </div>
+                            <div className="text-sm font-medium text-gray-900 truncate max-w-[200px]">{p.page || '/'}</div>
                           </td>
-                          <td className="px-4 py-3 text-right font-medium">
-                            {formatNumber(referrer.sessions)}
-                          </td>
+                          <td className="px-4 py-3 text-right text-sm font-medium">{fmt(p.clicks)}</td>
+                          <td className="px-4 py-3 text-right text-sm text-gray-500">{fmt(p.impressions)}</td>
                           <td className="px-4 py-3 text-right">
-                            <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">
-                              {referrer.percentage.toFixed(1)}%
-                            </span>
+                            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">{fmtCtr(p.ctr)}</span>
                           </td>
                         </tr>
-                      ))}
+                      )) : (
+                        <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-400">데이터가 없습니다</td></tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
-              </div>
+              </SectionCard>
             </div>
-
-            {/* 검색 키워드 */}
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <div className="p-4 border-b border-gray-200">
-                <h2 className="text-lg font-bold">검색 키워드</h2>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        키워드
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                        클릭
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                        노출
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                        클릭률
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {data.searchKeywords.map((keyword, index) => {
-                      const ctr = (parseInt(keyword.clicks) / parseInt(keyword.impressions)) * 100;
-                      return (
-                        <tr key={index} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <Search className="w-4 h-4 text-gray-400" />
-                              <span className="font-medium text-gray-900">{keyword.keyword}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-right font-medium">
-                            {formatNumber(keyword.clicks)}
-                          </td>
-                          <td className="px-4 py-3 text-right text-gray-600">
-                            {formatNumber(keyword.impressions)}
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <span className="px-2 py-1 bg-green-50 text-green-700 rounded text-xs font-medium">
-                              {ctr.toFixed(1)}%
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
+          </div>
         )}
       </main>
     </div>

@@ -43,7 +43,7 @@ interface WorksStats {
 
 interface DailyVisit {
   date: string;
-  visitors: number;
+  clicks: number;
 }
 
 export default function AdminDashboardPage() {
@@ -51,12 +51,13 @@ export default function AdminDashboardPage() {
   const [adminInfo, setAdminInfo] = useState<AdminInfo | null>(null);
   const [worksStats, setWorksStats] = useState<WorksStats | null>(null);
   const [dailyVisits, setDailyVisits] = useState<DailyVisit[]>([]);
+  const [chartLoading, setChartLoading] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAdminInfo();
     fetchWorksStats();
-    generateDailyVisits();
+    fetchSearchConsoleData();
   }, []);
 
   const fetchAdminInfo = async () => {
@@ -92,22 +93,22 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // 더미 데이터 생성 (실제로는 API에서 가져와야 함)
-  const generateDailyVisits = () => {
-    const data: DailyVisit[] = [];
-    const today = new Date();
-    
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      
-      data.push({
-        date: `${date.getMonth() + 1}/${date.getDate()}`,
-        visitors: Math.floor(Math.random() * 100) + 50,
-      });
+  const fetchSearchConsoleData = async () => {
+    setChartLoading(true);
+    try {
+      const res = await fetch('/api/admin/analytics/google?dateRange=30daysAgo');
+      if (!res.ok) return;
+      const json = await res.json();
+      const visits: DailyVisit[] = (json.dailyStats || []).map((d: { date: string; clicks: number }) => ({
+        date: d.date,
+        clicks: d.clicks,
+      }));
+      setDailyVisits(visits);
+    } catch (error) {
+      console.error('Search Console 데이터 로드 오류:', error);
+    } finally {
+      setChartLoading(false);
     }
-    
-    setDailyVisits(data);
   };
 
   const formatDate = (dateString: string) => {
@@ -138,9 +139,9 @@ export default function AdminDashboardPage() {
       stats: worksStats ? `${worksStats.activeWorks}개 활성` : '로딩 중...',
     },
     {
-      title: '통계(준비중)',
-      description: '방문자 및 활동 분석',
-      href: '/admin',
+      title: '통계',
+      description: '검색 유입 및 키워드 분석',
+      href: '/admin/analytics',
       stats: worksStats ? `${worksStats.totalViews.toLocaleString()} 조회` : '로딩 중...',
     },
     {
@@ -189,55 +190,54 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Daily Visitors Chart */}
+        {/* Search Console Chart */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-xl font-bold text-gray-900">일일 접속자 통계</h3>
-              <p className="text-sm text-gray-600 mt-1">최근 30일간의 방문자 추이</p>
+              <h3 className="text-xl font-bold text-gray-900">검색 클릭 추이</h3>
+              <p className="text-sm text-gray-600 mt-1">최근 30일간의 Google 검색 클릭 수</p>
             </div>
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-gray-900 mr-2"></div>
-                <span className="text-sm text-gray-600">방문자</span>
-              </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 rounded-full bg-gray-900 mr-2"></div>
+              <span className="text-sm text-gray-600">클릭</span>
             </div>
           </div>
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={dailyVisits}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="date" 
-                  stroke="#6b7280"
-                  fontSize={12}
-                  tickLine={false}
-                />
-                <YAxis 
-                  stroke="#6b7280"
-                  fontSize={12}
-                  tickLine={false}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                  }}
-                  labelStyle={{ color: '#111827', fontWeight: 'bold' }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="visitors" 
-                  stroke="#111827" 
-                  strokeWidth={2}
-                  dot={{ fill: '#111827', r: 4 }}
-                  activeDot={{ r: 6 }}
-                  name="방문자"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {chartLoading ? (
+              <div className="h-full flex items-center justify-center text-sm text-gray-400">
+                로딩 중...
+              </div>
+            ) : dailyVisits.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-sm text-gray-400">
+                Search Console 데이터가 없습니다
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={dailyVisits}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="date" stroke="#6b7280" fontSize={12} tickLine={false} />
+                  <YAxis stroke="#6b7280" fontSize={12} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    }}
+                    labelStyle={{ color: '#111827', fontWeight: 'bold' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="clicks"
+                    stroke="#111827"
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 5 }}
+                    name="클릭"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
