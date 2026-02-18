@@ -13,10 +13,11 @@ function isConfigured() {
 
 // 서비스 계정 → OAuth2 액세스 토큰
 async function getAccessToken(): Promise<string> {
-  const privateKey = await importPKCS8(
-    process.env.GA_PRIVATE_KEY!.replace(/\\n/g, '\n'),
-    'RS256'
-  );
+  const rawKey = process.env.GA_PRIVATE_KEY!
+    .replace(/^"([\s\S]*)"$/, '$1')  // strip surrounding quotes if entered with them in Vercel
+    .replace(/\\n/g, '\n');           // convert escaped \n to actual newlines
+
+  const privateKey = await importPKCS8(rawKey, 'RS256');
 
   const jwt = await new SignJWT({
     scope: 'https://www.googleapis.com/auth/webmasters.readonly',
@@ -151,7 +152,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ summary, dailyStats, topQueries, topPages });
   } catch (error) {
-    console.error('Search Console API error:', error);
+    console.error('Search Console API error:', error instanceof Error ? error.message : error);
     return NextResponse.json({ error: 'SC_API_ERROR' }, { status: 500 });
   }
 }
