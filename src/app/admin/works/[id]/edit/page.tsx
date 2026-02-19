@@ -1,4 +1,3 @@
-// src/app/admin/works/[id]/edit/page.tsx 수정
 'use client';
 
 import { useState, useEffect } from 'react';

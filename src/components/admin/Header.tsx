@@ -17,7 +17,7 @@ function Header() {
     useEffect(() => {
         // Admin 페이지임을 표시 (개발 환경에서 유용)
         if (process.env.NODE_ENV === 'development') {
-            console.log('🔐 Admin Page:', pathname);
+            console.log('Admin Page:', pathname);
         }
 
         // Admin 페이지에서는 body에 특별한 클래스 추가

@@ -240,7 +240,7 @@ function CompanyProfileSetting() {
                 <span>{fileInfo.size}</span>
               </div>
               <p className="text-xs text-amber-600 mt-2">
-                ⚠️ 새 파일을 업로드하면 현재 파일이 삭제됩니다.
+                새 파일을 업로드하면 현재 파일이 삭제됩니다.
               </p>
             </div>
           )}

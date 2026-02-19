@@ -1,4 +1,3 @@
-// src/app/api/works/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/utils/supabase";
 import { WorkItem, WorksResponse } from "@/types/works";

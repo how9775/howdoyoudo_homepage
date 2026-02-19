@@ -36,7 +36,7 @@ const ParticleBackground: React.FC = () => {
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // ✅ 부드러운 원형 텍스처 생성 함수
+    // 부드러운 원형 텍스처 생성 함수
     const createCircleTexture = () => {
       const canvas = document.createElement('canvas');
       const size = 64;

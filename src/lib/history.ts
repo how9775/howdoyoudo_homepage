@@ -1,4 +1,3 @@
-// src/lib/history.ts
 interface HistoryRow {
   id: number;
   year: string;

@@ -1,4 +1,3 @@
-// src/lib/emailService.ts
 import nodemailer from 'nodemailer';
 
 export interface ContactFormData {

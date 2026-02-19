@@ -1,4 +1,3 @@
-// src/lib/rateLimiter.ts
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 
 // IP 기반 Rate Limiter

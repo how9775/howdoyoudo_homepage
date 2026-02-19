@@ -1,4 +1,3 @@
-// src/app/api/admin/works/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/utils/supabase';
 import { verifyToken } from '@/lib/jwt';

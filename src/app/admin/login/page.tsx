@@ -1,4 +1,3 @@
-// src/app/admin/login/page.tsx
 import { Suspense } from 'react'
 import LoginForm from '@/components/admin/LoginForm'
 

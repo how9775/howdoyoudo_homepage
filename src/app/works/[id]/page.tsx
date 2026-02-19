@@ -1,4 +1,3 @@
-// src/app/works/[id]/page.tsx
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import WorkDetailClient from '../_components/WorkDetailClient';

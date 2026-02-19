@@ -1,4 +1,3 @@
-// src/app/api/admin/works/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/jwt';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';

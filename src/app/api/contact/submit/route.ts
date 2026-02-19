@@ -1,4 +1,3 @@
-// src/app/api/contact/submit/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { checkSubmissionLimit } from '@/lib/rateLimiter';

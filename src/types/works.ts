@@ -1,4 +1,3 @@
-// src/types/works.ts
 // Supabase 응답 타입 (실제로 받는 데이터 구조)
 export interface WorkItemFromDB {
   id: number;

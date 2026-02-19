@@ -1,4 +1,3 @@
-// src/app/admin/works/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -79,7 +78,7 @@ export default function AdminWorksPage() {
   };
 
   const handleDelete = async (workId: number, title: string) => {
-    if (!confirm(`"${title}"를 완전히 삭제하시겠습니까?\n\n⚠️ 이 작업은 되돌릴 수 없으며, DB에서 영구적으로 제거됩니다.`)) {
+    if (!confirm(`"${title}"를 완전히 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없으며, DB에서 영구적으로 제거됩니다.`)) {
       return;
     }
 

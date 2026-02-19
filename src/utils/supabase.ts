@@ -1,4 +1,3 @@
-// src/utils/supabase.ts
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -26,9 +25,9 @@ if (typeof window === 'undefined') {
         .limit(1)
       
       if (error) throw error
-      console.log('✅ Supabase connected successfully')
+      console.log('Supabase connected successfully')
     } catch (err) {
-      console.error('❌ Supabase connection failed:', err)
+      console.error('Supabase connection failed:', err)
     }
   })()
 }

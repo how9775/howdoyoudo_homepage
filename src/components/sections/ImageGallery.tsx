@@ -1,4 +1,3 @@
-// src/components/sections/ImageGallery.tsx
 'use client'
 
 import { useEffect, useRef, useState } from 'react'

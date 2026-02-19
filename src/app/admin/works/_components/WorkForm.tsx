@@ -1,4 +1,3 @@
-// src/app/admin/works/_components/WorkForm.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -388,7 +387,7 @@ export default function WorkForm({
         {/* Info Box */}
         <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-3">
           <div className="flex items-start space-x-2 text-xs text-gray-600">
-            <span className="font-medium">ℹ️</span>
+            <span className="font-medium"></span>
             <div className="space-y-1">
               <p>• 최대 용량: <span className="font-semibold text-gray-800">5MB</span> (초과 시 자동 최적화)</p>
               <p>• 최대 크기: <span className="font-semibold text-gray-800">1920x1920px</span> (초과 시 리사이즈)</p>
