@@ -3,7 +3,10 @@ import { WorksResponse } from '@/types/works';
 import WorksClient from './_components/WorksClient';
 import PageHeader from '@/components/sections/PageHeader';
 
+const BASE_URL = 'https://hdyd.co.kr';
+
 export const metadata: Metadata = {
+  title: 'Works | HOWDOYOUDO',
   description: 'SPACE & DISPLAY VMD, LAUNCHING SHOWCASE, PROMOTION EVENT, STAR MARKETING 등 하우두유두가 진행한 다양한 BTL 프로젝트를 확인하세요. Full-Covering System으로 제공되는 토탈 솔루션 사례를 소개합니다.',
   keywords: [
     '포트폴리오',
@@ -16,10 +19,14 @@ export const metadata: Metadata = {
     '이벤트 사례',
     'Full-Covering System'
   ],
+  alternates: {
+    canonical: `${BASE_URL}/works`,
+  },
   openGraph: {
     title: 'Works | HOWDOYOUDO',
     description: 'BTL 영역의 다양한 프로젝트 포트폴리오',
     type: 'website',
+    url: `${BASE_URL}/works`,
     images: {
       url: '/howdoyoudo_siteImage.png',
       width: 1200,
@@ -34,7 +41,7 @@ async function getInitialData(): Promise<WorksResponse> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const response = await fetch(`${baseUrl}/api/works?page=1&limit=21`, {
-      cache: 'no-store', // Disable caching for development
+      next: { revalidate: 3600 },
     });
 
     if (!response.ok) {
