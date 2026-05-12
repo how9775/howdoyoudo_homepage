@@ -40,7 +40,8 @@ export const metadata: Metadata = {
 async function getInitialData(): Promise<WorksResponse> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/works?page=1&limit=21`, {
+    const excludeName = encodeURIComponent('제작');
+    const response = await fetch(`${baseUrl}/api/works?page=1&limit=21&excludeCategoryName=${excludeName}`, {
       next: { revalidate: 3600 },
     });
 

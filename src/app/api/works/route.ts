@@ -33,9 +33,25 @@ export async function GET(request: NextRequest) {
       `, { count: 'exact' })
       .eq("is_active", true);
 
+    const excludeCategoryId = searchParams.get("excludeCategoryId");
+    const excludeCategoryName = searchParams.get("excludeCategoryName");
+
+    // excludeCategoryName을 ID로 변환
+    let resolvedExcludeId: number | null = excludeCategoryId ? parseInt(excludeCategoryId) : null;
+    if (!resolvedExcludeId && excludeCategoryName) {
+      const { data: excludeCat } = await supabaseAdmin
+        .from("work_categories")
+        .select("id")
+        .eq("display_name", excludeCategoryName)
+        .single();
+      if (excludeCat?.id) resolvedExcludeId = excludeCat.id;
+    }
+
     // 필터 적용
     if (categoryId && categoryId !== "all") {
       worksQuery = worksQuery.eq("category_id", parseInt(categoryId));
+    } else if (resolvedExcludeId) {
+      worksQuery = worksQuery.neq("category_id", resolvedExcludeId);
     }
 
     if (year === "recent") {

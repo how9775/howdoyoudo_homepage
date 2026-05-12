@@ -8,11 +8,13 @@ interface WorksGridProps {
     works: WorkItem[];
     loading: boolean;
     hasMore: boolean;
+    selectedCategoryId?: number | null;
 }
 
-function WorkCard({ work }: { work: WorkItem }) {
+function WorkCard({ work, fromCategory }: { work: WorkItem; fromCategory?: number | null }) {
+    const from = fromCategory !== null && fromCategory !== undefined ? `?from=${fromCategory}` : '';
     return (
-        <Link href={`/works/${work.id}`} data-no-transition="true" className="group block">
+        <Link href={`/works/${work.id}${from}`} data-no-transition="true" className="group block">
             {/* 이미지 컨테이너 */}
             <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-gray-100 shadow-sm hover:shadow-lg transition-all duration-300">
                 {/* 썸네일 이미지 */}
@@ -80,7 +82,7 @@ function LoadingSkeleton() {
     );
 }
 
-export default function WorksGrid({ works, loading, hasMore }: WorksGridProps) {
+export default function WorksGrid({ works, loading, hasMore, selectedCategoryId }: WorksGridProps) {
     return (
         <section className="py-12 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -88,7 +90,7 @@ export default function WorksGrid({ works, loading, hasMore }: WorksGridProps) {
                 {works.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                         {works.map((work) => (
-                            <WorkCard key={work.id} work={work} />
+                            <WorkCard key={work.id} work={work} fromCategory={selectedCategoryId} />
                         ))}
                     </div>
                 ) : (

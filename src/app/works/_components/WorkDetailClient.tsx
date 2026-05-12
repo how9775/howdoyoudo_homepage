@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Share2, Calendar, Eye, Tag, Check, ChevronLeft, ChevronRight, ArrowLeftToLine } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Share2, Calendar, Tag, Check, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import { WorkItem } from '@/types/works';
 
 interface WorkDetailClientProps {
@@ -20,21 +21,20 @@ export default function WorkDetailClient({ initialData }: WorkDetailClientProps)
   const { work, navigation } = initialData;
   const [showCopyToast, setShowCopyToast] = useState(false);
 
+  // 목록으로 돌아갈 때 카테고리 상태 복원
+  const searchParams = useSearchParams();
+  const fromCategory = searchParams.get('from');
+  const listHref = fromCategory ? `/works?category=${fromCategory}` : '/works';
+
   const handleShare = async () => {
     const url = window.location.href;
-    
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: work.title,
-          text: work.description,
-          url: url,
-        });
-      } catch (err) {
-        console.log('Share cancelled');
+        await navigator.share({ title: work.title, text: work.description, url });
+      } catch {
+        // cancelled
       }
     } else {
-      // Fallback: Copy to clipboard
       try {
         await navigator.clipboard.writeText(url);
         setShowCopyToast(true);
@@ -66,17 +66,16 @@ export default function WorkDetailClient({ initialData }: WorkDetailClientProps)
         </div>
       )}
 
-      {/* Main Content */}
       <main className="max-w-5xl mx-auto px-6 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12">
-        {/* Top Navigation */}
-        <div className="flex items-center justify-between mb-6 sm:mb-8 pb-4 sm:pb-6">
+        {/* Top: 목록으로 버튼 */}
+        <div className="flex items-center mb-6 sm:mb-8 pb-4 sm:pb-6">
           <Link
-            href="/works"
+            href={listHref}
             data-no-transition="true"
-            className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-full hover:bg-gray-700 transition-colors duration-300"
           >
-            <ArrowLeftToLine className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="text-sm sm:text-base font-medium">목록으로</span>
+            <List className="w-4 h-4" />
+            목록으로
           </Link>
         </div>
 
@@ -86,7 +85,7 @@ export default function WorkDetailClient({ initialData }: WorkDetailClientProps)
             {work.title}
           </h1>
 
-          {/* Meta Information & Share Button */}
+          {/* Meta + Share */}
           <div className="flex justify-between gap-3 sm:gap-4">
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600">
               <div className="flex items-center space-x-2">
@@ -98,8 +97,6 @@ export default function WorkDetailClient({ initialData }: WorkDetailClientProps)
                 <span>{formatDate(work.eventDate)}</span>
               </div>
             </div>
-            
-            {/* Share Button */}
             <button
               onClick={handleShare}
               className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-full transition-colors w-fit text-xs sm:text-sm"
@@ -110,17 +107,14 @@ export default function WorkDetailClient({ initialData }: WorkDetailClientProps)
           </div>
         </div>
 
-
         {/* Description */}
         <div className="mb-8 sm:mb-12 md:mb-16">
-          <div className="prose prose-sm sm:prose-base lg:prose-lg max-w-none">
-            <p className="text-gray-700 text-sm sm:text-base lg:text-lg leading-relaxed whitespace-pre-wrap">
-              {work.description}
-            </p>
-          </div>
+          <p className="text-gray-700 text-sm sm:text-base lg:text-lg leading-relaxed whitespace-pre-wrap">
+            {work.description}
+          </p>
         </div>
 
-        {/* Content Images - 깔끔하게 이미지만 표시 */}
+        {/* Content Images */}
         {work.contentImages.length > 0 && (
           <div className="space-y-6 sm:space-y-8 md:space-y-12 mb-8 sm:mb-12 md:mb-16">
             {work.contentImages.map((imageUrl, index) => (
@@ -139,58 +133,71 @@ export default function WorkDetailClient({ initialData }: WorkDetailClientProps)
           </div>
         )}
 
-        {/* Navigation */}
-        <div className="border-t border-gray-200 pt-6 sm:pt-8 md:pt-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            {/* Previous Work */}
-            {navigation.prev ? (
-              <Link
-                href={`/works/${navigation.prev.id}`}
-                data-no-transition="true"
-                className="group p-4 sm:p-6 transition-all duration-300"
-              >
-                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
-                  <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 group-hover:text-gray-900 transition-colors" />
-                  <span className="text-xs sm:text-sm font-medium text-gray-500 group-hover:text-gray-900 transition-colors">
-                    이전
-                  </span>
+        {/* Bottom Navigation */}
+        <div className="border-t border-gray-200 pt-8 sm:pt-10 md:pt-12 mt-4">
+          {/* 이전 / 목록으로 / 다음 — 3열 */}
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 items-stretch">
+            {/* 이전 게시물 */}
+            <div>
+              {navigation.prev ? (
+                <Link
+                  href={`/works/${navigation.prev.id}`}
+                  data-no-transition="true"
+                  className="group flex flex-col h-full p-4 sm:p-5 border border-gray-200 rounded-2xl hover:border-gray-900 hover:bg-gray-50 transition-all duration-300"
+                >
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <ChevronLeft className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-900 transition-colors flex-shrink-0" />
+                    <span className="text-[10px] sm:text-xs font-semibold text-gray-400 group-hover:text-gray-600 transition-colors uppercase tracking-wide">
+                      이전
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-800 line-clamp-2 group-hover:text-gray-600 transition-colors leading-snug">
+                    {navigation.prev.title}
+                  </p>
+                </Link>
+              ) : (
+                <div className="h-full p-4 sm:p-5 border border-dashed border-gray-200 rounded-2xl flex items-center justify-center">
+                  <span className="text-xs text-gray-300">이전 없음</span>
                 </div>
-                <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 line-clamp-2 group-hover:text-gray-700 transition-colors">
-                  {navigation.prev.title}
-                </h3>
-              </Link>
-            ) : null}
+              )}
+            </div>
 
-            {/* Next Work */}
-            {navigation.next ? (
+            {/* 목록으로 — 중앙 */}
+            <div className="flex items-center justify-center">
               <Link
-                href={`/works/${navigation.next.id}`}
+                href={listHref}
                 data-no-transition="true"
-                className="group p-4 sm:p-6 transition-all duration-300"
+                className="text-xs sm:text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors duration-200"
               >
-                <div className="flex items-center justify-end space-x-2 sm:space-x-3 mb-2">
-                  <span className="text-xs sm:text-sm font-medium text-gray-500 group-hover:text-gray-900 transition-colors">
-                    다음
-                  </span>
-                  <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 group-hover:text-gray-900 transition-colors" />
-                </div>
-                <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 line-clamp-2 text-right group-hover:text-gray-700 transition-colors">
-                  {navigation.next.title}
-                </h3>
+                목록으로
               </Link>
-            ) : null}
+            </div>
+
+            {/* 다음 게시물 */}
+            <div>
+              {navigation.next ? (
+                <Link
+                  href={`/works/${navigation.next.id}`}
+                  data-no-transition="true"
+                  className="group flex flex-col h-full p-4 sm:p-5 border border-gray-200 rounded-2xl hover:border-gray-900 hover:bg-gray-50 transition-all duration-300"
+                >
+                  <div className="flex items-center justify-end gap-1.5 mb-2">
+                    <span className="text-[10px] sm:text-xs font-semibold text-gray-400 group-hover:text-gray-600 transition-colors uppercase tracking-wide">
+                      다음
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-900 transition-colors flex-shrink-0" />
+                  </div>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-800 line-clamp-2 text-right group-hover:text-gray-600 transition-colors leading-snug">
+                    {navigation.next.title}
+                  </p>
+                </Link>
+              ) : (
+                <div className="h-full p-4 sm:p-5 border border-dashed border-gray-200 rounded-2xl flex items-center justify-center">
+                  <span className="text-xs text-gray-300">다음 없음</span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-
-        {/* Back to List Button */}
-        <div className="text-center mt-8 sm:mt-12 md:mt-16">
-          <Link
-            href="/works"
-            data-no-transition="true"
-            className="inline-flex items-center text-gray-700 hover:text-gray-900 transition-colors"
-          >
-            <span className="text-sm sm:text-base font-medium">목록으로</span>
-          </Link>
         </div>
       </main>
     </div>
