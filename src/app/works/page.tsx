@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 import { WorksResponse } from '@/types/works';
 import WorksClient from './_components/WorksClient';
 import PageHeader from '@/components/sections/PageHeader';
@@ -70,7 +71,9 @@ export default async function WorksPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <PageHeader title='CREATIVE BUSINESS' description='하우두유두가 함께한 여정을 살펴보세요' />
 
-        <WorksClient initialData={initialData} />
+        <Suspense>
+          <WorksClient initialData={initialData} />
+        </Suspense>
       </div>
     </div>
   );

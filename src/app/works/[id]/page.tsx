@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import WorkDetailClient from '../_components/WorkDetailClient';
 import { WorkItem } from '@/types/works';
 
@@ -114,7 +115,9 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ id:
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <WorkDetailClient initialData={data} />
+      <Suspense>
+        <WorkDetailClient initialData={data} />
+      </Suspense>
     </>
   );
 }
