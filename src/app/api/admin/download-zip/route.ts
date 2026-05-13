@@ -21,12 +21,13 @@ export async function POST(request: NextRequest) {
     })
   );
 
-  const zipBuffer = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
+  const zipBuffer = await zip.generateAsync({ type: 'arraybuffer', compression: 'DEFLATE' });
+  const zipBlob = new Blob([zipBuffer], { type: 'application/zip' });
   const filename = workId
     ? `howdoyoudo_work_${workId}_image.zip`
     : 'howdoyoudo_images.zip';
 
-  return new NextResponse(zipBuffer, {
+  return new NextResponse(zipBlob, {
     headers: {
       'Content-Type': 'application/zip',
       'Content-Disposition': `attachment; filename="${filename}"`,
