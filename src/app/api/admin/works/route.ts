@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
         id: work.id,
         title: work.title,
         categoryId: work.category_id,
-        categoryName: work.work_categories?.display_name || "",
+        categoryDisplayName: work.work_categories?.display_name || "",
         description: work.description,
         eventDate: work.event_date,
         thumbnailImage: work.thumbnail_image,

@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+
 import Image from 'next/image';
 
 interface Work {
@@ -118,13 +119,22 @@ export default function AdminWorksPage() {
               작업 목록을 관리하고 편집할 수 있습니다.
             </p>
           </div>
-          <button
-            onClick={() => router.push('/admin/works/new')}
-            className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            새 작업 추가
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push('/admin/works/categories')}
+              className="inline-flex items-center px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <Tag className="w-4 h-4 mr-2" />
+              카테고리 관리
+            </button>
+            <button
+              onClick={() => router.push('/admin/works/new')}
+              className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              새 작업 추가
+            </button>
+          </div>
         </div>
 
         {/* Filters */}

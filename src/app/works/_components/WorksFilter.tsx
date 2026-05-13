@@ -34,36 +34,30 @@ export default function WorksFilter({
 
         {/* 데스크톱 버전 */}
         <div className="hidden md:flex flex-row items-center gap-3 w-full">
-          {/* 왼쪽: 일반 카테고리 */}
-          <div className="flex flex-wrap items-center gap-3 flex-1">
+          <button
+            onClick={() => onCategoryChange(null)}
+            className={`${btnBase} ${selectedCategoryId === null && !isSpecialSelected ? btnActive : btnIdle}`}
+          >
+            전체
+          </button>
+          {categories.map((category) => (
             <button
-              onClick={() => onCategoryChange(null)}
-              className={`${btnBase} ${selectedCategoryId === null && !isSpecialSelected ? btnActive : btnIdle}`}
+              key={category.id}
+              onClick={() => onCategoryChange(category.id)}
+              className={`${btnBase} ${selectedCategoryId === category.id ? btnActive : btnIdle}`}
             >
-              전체
+              {category.displayName}
             </button>
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => onCategoryChange(category.id)}
-                className={`${btnBase} ${selectedCategoryId === category.id ? btnActive : btnIdle}`}
-              >
-                {category.displayName}
-              </button>
-            ))}
-          </div>
+          ))}
 
-          {/* 구분선 + 오른쪽: 제작 카테고리 */}
+          {/* 제작: 맨 오른쪽 고정 */}
           {specialCategory && (
-            <>
-              <div className="h-8 w-px bg-gray-300 flex-shrink-0" />
-              <button
-                onClick={() => onCategoryChange(specialCategory.id)}
-                className={`${btnBase} flex-shrink-0 ${isSpecialSelected ? btnActive : btnIdle}`}
-              >
-                {specialCategory.displayName}
-              </button>
-            </>
+            <button
+              onClick={() => onCategoryChange(specialCategory.id)}
+              className={`${btnBase} flex-shrink-0 ${isSpecialSelected ? btnActive : btnIdle}`}
+            >
+              {specialCategory.displayName}
+            </button>
           )}
         </div>
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { supabaseAdmin } from '@/utils/supabase';
 import { verifyToken } from '@/lib/jwt';
 
@@ -60,6 +61,7 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
+    revalidatePath('/works');
     return NextResponse.json({
       success: true,
       message: '카테고리가 성공적으로 생성되었습니다.',
@@ -69,6 +71,49 @@ export async function POST(request: NextRequest) {
     console.error('카테고리 생성 오류:', error);
     return NextResponse.json(
       { success: false, error: '카테고리 생성에 실패했습니다.' },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH - 카테고리 이름 수정
+export async function PATCH(request: NextRequest) {
+  try {
+    const token = request.cookies.get('admin_token')?.value;
+    if (!token || !verifyToken(token)) {
+      return NextResponse.json(
+        { success: false, error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    const { id, displayName } = await request.json();
+    if (!id || !displayName || !displayName.trim()) {
+      return NextResponse.json(
+        { success: false, error: '카테고리 ID와 이름을 입력해주세요.' },
+        { status: 400 }
+      );
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('work_categories')
+      .update({ display_name: displayName.trim() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    revalidatePath('/works');
+    return NextResponse.json({
+      success: true,
+      message: '카테고리 이름이 수정되었습니다.',
+      data,
+    });
+  } catch (error) {
+    console.error('카테고리 수정 오류:', error);
+    return NextResponse.json(
+      { success: false, error: '카테고리 수정에 실패했습니다.' },
       { status: 500 }
     );
   }
@@ -120,6 +165,7 @@ export async function DELETE(request: NextRequest) {
 
     if (error) throw error;
 
+    revalidatePath('/works');
     return NextResponse.json({
       success: true,
       message: '카테고리가 성공적으로 삭제되었습니다.',

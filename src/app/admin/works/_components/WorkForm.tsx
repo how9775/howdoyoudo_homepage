@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import CategoryManager from './CategoryManager';
 import ImageUploader from './ImageUploader';
-import { Save, Loader2, Upload, X } from 'lucide-react';
+import { Save, Loader2, Upload, X, Download } from 'lucide-react';
 import Image from 'next/image';
 import { resizeImage, formatFileSize, isAllowedImageType } from '@/lib/imageUtils';
 
@@ -192,6 +192,33 @@ export default function WorkForm({
     setKeepExistingImages((prev) => prev.filter((img) => img !== url));
   };
 
+  const downloadImage = async (url: string, filename?: string) => {
+    try {
+      const name = filename || url.split('/').pop()?.split('?')[0] || 'image';
+      const proxyUrl = `/api/admin/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(name)}`;
+      const response = await fetch(proxyUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      alert('다운로드에 실패했습니다.');
+    }
+  };
+
+  const downloadAllExistingImages = async () => {
+    for (let i = 0; i < keepExistingImages.length; i++) {
+      const url = keepExistingImages[i];
+      const ext = url.split('.').pop()?.split('?')[0] || 'jpg';
+      await downloadImage(url, `image_${i + 1}.${ext}`);
+      // 브라우저가 여러 다운로드를 막지 않도록 약간 대기
+      await new Promise((res) => setTimeout(res, 300));
+    }
+  };
+
   const uploadImage = async (imageFile: ImageFile, index: number, total: number): Promise<string> => {
     const formData = new FormData();
     formData.append('file', imageFile.file);
@@ -375,7 +402,7 @@ export default function WorkForm({
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           placeholder="게시글 설명을 입력하세요"
-          rows={4}
+          rows={16}
           className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none resize-none"
           disabled={saving}
         />
@@ -421,14 +448,27 @@ export default function WorkForm({
                     {formatFileSize(thumbnailFile.file.size)}
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={handleRemoveThumbnail}
-                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                  title="삭제"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <div className="absolute top-2 right-2 flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => downloadImage(
+                      thumbnailFile ? thumbnailFile.preview : keepExistingThumbnail!,
+                      'thumbnail'
+                    )}
+                    className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    title="다운로드"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemoveThumbnail}
+                    className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    title="삭제"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -466,9 +506,19 @@ export default function WorkForm({
 
         {mode === 'edit' && keepExistingImages.length > 0 && (
           <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">
-              기존 이미지 ({keepExistingImages.length}개)
-            </h4>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-medium text-gray-700">
+                기존 이미지 ({keepExistingImages.length}개)
+              </h4>
+              <button
+                type="button"
+                onClick={downloadAllExistingImages}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <Download className="w-3.5 h-3.5" />
+                모두 다운로드
+              </button>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {keepExistingImages.map((url, index) => (
                 <div
@@ -488,7 +538,15 @@ export default function WorkForm({
                   </div>
 
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors">
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-2">
+                      <button
+                        type="button"
+                        onClick={() => downloadImage(url)}
+                        className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        title="다운로드"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleRemoveExistingImage(url)}
