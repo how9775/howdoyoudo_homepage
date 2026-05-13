@@ -66,15 +66,13 @@ export async function GET(
       .update({ view_count: work.view_count + 1 })
       .eq('id', workId);
 
-    // "제작" 카테고리 ID 조회 — 분리 네비게이션에 사용
-    const { data: specialCat } = await supabase
+    // 숨김 카테고리 ID 목록 조회 — 분리 네비게이션에 사용
+    const { data: hiddenCats } = await supabase
       .from('work_categories')
       .select('id')
-      .eq('display_name', '제작')
-      .single();
-
-    const specialCatId: number | null = specialCat?.id ?? null;
-    const isSpecialWork = specialCatId !== null && work.category_id === specialCatId;
+      .eq('is_hidden_from_public', true);
+    const hiddenCatIds: number[] = hiddenCats?.map((c: { id: number }) => c.id) ?? [];
+    const isHiddenWork = hiddenCatIds.includes(work.category_id);
     const workEventDate: string = work.event_date;
 
     // 이전 게시물: 현재보다 오래된 것 중 가장 최신 (list에서 아래에 위치)
@@ -97,14 +95,14 @@ export async function GET(
       .order('id', { ascending: true })
       .limit(1);
 
-    if (isSpecialWork) {
-      // 제작 카테고리끼리만 이동
+    if (isHiddenWork) {
+      // 숨김 카테고리끼리만 이동
       prevQuery = prevQuery.eq('category_id', work.category_id);
       nextQuery = nextQuery.eq('category_id', work.category_id);
-    } else if (specialCatId !== null) {
-      // 제작 카테고리 제외하고 이동
-      prevQuery = prevQuery.neq('category_id', specialCatId);
-      nextQuery = nextQuery.neq('category_id', specialCatId);
+    } else if (hiddenCatIds.length > 0) {
+      // 숨김 카테고리 제외하고 이동
+      prevQuery = prevQuery.not('category_id', 'in', `(${hiddenCatIds.join(',')})`);
+      nextQuery = nextQuery.not('category_id', 'in', `(${hiddenCatIds.join(',')})`);
     }
 
     const [{ data: prevWork }, { data: nextWork }] = await Promise.all([

@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     const { data: categories, error } = await supabaseAdmin
       .from('work_categories')
-      .select('id, display_name, is_active, created_at')
+      .select('id, display_name, is_active, is_hidden_from_public, created_at')
       .order('id', { ascending: true });
 
     if (error) throw error;
@@ -87,17 +87,31 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const { id, displayName } = await request.json();
-    if (!id || !displayName || !displayName.trim()) {
+    const { id, displayName, isHiddenFromPublic } = await request.json();
+    if (!id) {
       return NextResponse.json(
-        { success: false, error: '카테고리 ID와 이름을 입력해주세요.' },
+        { success: false, error: '카테고리 ID가 필요합니다.' },
         { status: 400 }
       );
     }
 
+    const updatePayload: Record<string, unknown> = {};
+    if (displayName !== undefined) {
+      if (!displayName.trim()) {
+        return NextResponse.json(
+          { success: false, error: '카테고리 이름을 입력해주세요.' },
+          { status: 400 }
+        );
+      }
+      updatePayload.display_name = displayName.trim();
+    }
+    if (isHiddenFromPublic !== undefined) {
+      updatePayload.is_hidden_from_public = isHiddenFromPublic;
+    }
+
     const { data, error } = await supabaseAdmin
       .from('work_categories')
-      .update({ display_name: displayName.trim() })
+      .update(updatePayload)
       .eq('id', id)
       .select()
       .single();

@@ -33,25 +33,23 @@ export async function GET(request: NextRequest) {
       `, { count: 'exact' })
       .eq("is_active", true);
 
-    const excludeCategoryId = searchParams.get("excludeCategoryId");
-    const excludeCategoryName = searchParams.get("excludeCategoryName");
+    const excludeHidden = searchParams.get("excludeHidden") === "true";
 
-    // excludeCategoryName을 ID로 변환
-    let resolvedExcludeId: number | null = excludeCategoryId ? parseInt(excludeCategoryId) : null;
-    if (!resolvedExcludeId && excludeCategoryName) {
-      const { data: excludeCat } = await supabaseAdmin
+    // 숨김 카테고리 ID 목록 조회
+    let hiddenCategoryIds: number[] = [];
+    if (excludeHidden && !categoryId) {
+      const { data: hiddenCats } = await supabaseAdmin
         .from("work_categories")
         .select("id")
-        .eq("display_name", excludeCategoryName)
-        .single();
-      if (excludeCat?.id) resolvedExcludeId = excludeCat.id;
+        .eq("is_hidden_from_public", true);
+      hiddenCategoryIds = hiddenCats?.map((c: { id: number }) => c.id) ?? [];
     }
 
     // 필터 적용
     if (categoryId && categoryId !== "all") {
       worksQuery = worksQuery.eq("category_id", parseInt(categoryId));
-    } else if (resolvedExcludeId) {
-      worksQuery = worksQuery.neq("category_id", resolvedExcludeId);
+    } else if (hiddenCategoryIds.length > 0) {
+      worksQuery = worksQuery.not("category_id", "in", `(${hiddenCategoryIds.join(",")})`);
     }
 
     if (year === "recent") {
@@ -79,7 +77,7 @@ export async function GET(request: NextRequest) {
     // Categories 조회
     const { data: categoriesData, error: categoriesError } = await supabaseAdmin
       .from("work_categories")
-      .select("*")
+      .select("id, display_name, is_active, is_hidden_from_public, created_at")
       .eq("is_active", true)
       .order("id", { ascending: true });
 
@@ -122,6 +120,7 @@ export async function GET(request: NextRequest) {
         id: c.id,
         displayName: c.display_name,
         isActive: c.is_active,
+        isHiddenFromPublic: c.is_hidden_from_public ?? false,
         createdAt: c.created_at,
       })),
       hasMore: offset + limit < (totalCount || 0),

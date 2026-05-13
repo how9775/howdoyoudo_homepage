@@ -4,7 +4,7 @@ import { CategoryInfo } from '@/types/works';
 
 interface WorksFilterProps {
   categories: CategoryInfo[];
-  specialCategory?: CategoryInfo;
+  hiddenCategories: CategoryInfo[];
   selectedCategoryId: number | null;
   selectedYear: 'recent' | 'previous' | null;
   onCategoryChange: (categoryId: number | null) => void;
@@ -18,15 +18,13 @@ const btnIdle = 'text-gray-600 bg-gray-50 border border-gray-200 hover:bg-gray-1
 
 export default function WorksFilter({
   categories,
-  specialCategory,
+  hiddenCategories,
   selectedCategoryId,
   selectedYear,
   onCategoryChange,
   onYearChange,
 }: WorksFilterProps) {
-  const isSpecialSelected = specialCategory
-    ? selectedCategoryId === specialCategory.id
-    : false;
+  const isHiddenSelected = hiddenCategories.some(c => c.id === selectedCategoryId);
 
   return (
     <section className="py-0 sm:py-8 bg-white border-b border-gray-100">
@@ -36,7 +34,7 @@ export default function WorksFilter({
         <div className="hidden md:flex flex-row items-center justify-center gap-3 w-full">
           <button
             onClick={() => onCategoryChange(null)}
-            className={`${btnBase} ${selectedCategoryId === null && !isSpecialSelected ? btnActive : btnIdle}`}
+            className={`${btnBase} ${selectedCategoryId === null && !isHiddenSelected ? btnActive : btnIdle}`}
           >
             전체
           </button>
@@ -50,14 +48,20 @@ export default function WorksFilter({
             </button>
           ))}
 
-          {/* 제작: 맨 오른쪽 고정 */}
-          {specialCategory && (
-            <button
-              onClick={() => onCategoryChange(specialCategory.id)}
-              className={`${btnBase} flex-shrink-0 ${isSpecialSelected ? btnActive : btnIdle}`}
-            >
-              {specialCategory.displayName}
-            </button>
+          {/* 숨김 카테고리: 구분선 후 별도 표시 */}
+          {hiddenCategories.length > 0 && (
+            <>
+              <span className="w-px h-6 bg-gray-200 flex-shrink-0" />
+              {hiddenCategories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => onCategoryChange(category.id)}
+                  className={`${btnBase} flex-shrink-0 ${selectedCategoryId === category.id ? btnActive : btnIdle}`}
+                >
+                  {category.displayName}
+                </button>
+              ))}
+            </>
           )}
         </div>
 
@@ -66,7 +70,7 @@ export default function WorksFilter({
           {/* 일반 카테고리 셀렉트 */}
           <div className="flex-1 min-w-0">
             <select
-              value={isSpecialSelected ? 'all' : (selectedCategoryId === null ? 'all' : selectedCategoryId)}
+              value={isHiddenSelected ? 'all' : (selectedCategoryId === null ? 'all' : selectedCategoryId)}
               onChange={(e) => {
                 const value = e.target.value;
                 onCategoryChange(value === 'all' ? null : parseInt(value));
@@ -91,20 +95,21 @@ export default function WorksFilter({
             </select>
           </div>
 
-          {/* 제작 카테고리 버튼 */}
-          {specialCategory && (
+          {/* 숨김 카테고리 버튼들 */}
+          {hiddenCategories.map((category) => (
             <button
-              onClick={() => onCategoryChange(specialCategory.id)}
+              key={category.id}
+              onClick={() => onCategoryChange(category.id)}
               className={`flex-shrink-0 px-4 py-3 text-sm font-medium rounded-lg border transition-all duration-300
                 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50
-                ${isSpecialSelected
+                ${selectedCategoryId === category.id
                   ? 'text-red-600 bg-red-50 border-red-200 shadow-sm'
                   : 'text-gray-600 bg-gray-50 border-gray-200 hover:bg-gray-100'
                 }`}
             >
-              {specialCategory.displayName}
+              {category.displayName}
             </button>
-          )}
+          ))}
         </div>
 
       </div>

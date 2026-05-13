@@ -11,12 +11,12 @@ export async function GET(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!  // 읽기 + 필터링 가능
     );
 
-    // "제작" 카테고리 ID 조회 (메인 페이지에서 제외)
-    const { data: specialCat } = await supabase
+    // 숨김 카테고리 ID 목록 조회 (메인 페이지에서 제외)
+    const { data: hiddenCats } = await supabase
       .from("work_categories")
       .select("id")
-      .eq("display_name", "제작")
-      .single();
+      .eq("is_hidden_from_public", true);
+    const hiddenIds = hiddenCats?.map((c: { id: number }) => c.id) ?? [];
 
     // 최신 작업 가져오기
     let worksQuery = supabase
@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
       `)
       .eq("is_active", 1);
 
-    if (specialCat?.id) {
-      worksQuery = worksQuery.neq("category_id", specialCat.id);
+    if (hiddenIds.length > 0) {
+      worksQuery = worksQuery.not("category_id", "in", `(${hiddenIds.join(",")})`);
     }
 
     const { data, error } = await worksQuery

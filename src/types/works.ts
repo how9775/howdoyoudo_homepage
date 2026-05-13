@@ -56,6 +56,7 @@ export interface CategoryInfo {
   id: number;
   displayName: string;
   isActive: boolean;
+  isHiddenFromPublic: boolean;
   createdAt: string;
 }
 

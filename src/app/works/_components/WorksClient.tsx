@@ -6,8 +6,6 @@ import { WorkItem, WorksResponse, CategoryInfo } from '@/types/works';
 import WorksFilter from './WorksFilter';
 import WorksGrid from './WorksGrid';
 
-const SPECIAL_CATEGORY_NAME = '제작';
-
 interface WorksClientProps {
   initialData: WorksResponse;
 }
@@ -18,8 +16,8 @@ export default function WorksClient({ initialData }: WorksClientProps) {
 
   const [works, setWorks] = useState<WorkItem[]>(initialData.works);
   const [allCategories] = useState<CategoryInfo[]>(initialData.categories);
-  const specialCategory = allCategories.find(c => c.displayName === SPECIAL_CATEGORY_NAME);
-  const categories = allCategories.filter(c => c.displayName !== SPECIAL_CATEGORY_NAME);
+  const hiddenCategories = allCategories.filter(c => c.isHiddenFromPublic);
+  const categories = allCategories.filter(c => !c.isHiddenFromPublic);
 
   // URL에서 초기 카테고리 읽기
   const getUrlCategory = () => {
@@ -46,8 +44,8 @@ export default function WorksClient({ initialData }: WorksClientProps) {
 
       if (categoryId !== null) {
         params.append('categoryId', categoryId.toString());
-      } else if (specialCategory) {
-        params.append('excludeCategoryId', specialCategory.id.toString());
+      } else {
+        params.append('excludeHidden', 'true');
       }
 
       if (year) params.append('year', year);
@@ -64,7 +62,7 @@ export default function WorksClient({ initialData }: WorksClientProps) {
     } finally {
       setLoading(false);
     }
-  }, [specialCategory]);
+  }, [hiddenCategories]);
 
   // 마운트 시 URL에 카테고리가 있으면 해당 데이터로 교체
   const didInitRef = useRef(false);
@@ -125,7 +123,7 @@ export default function WorksClient({ initialData }: WorksClientProps) {
     <>
       <WorksFilter
         categories={categories}
-        specialCategory={specialCategory}
+        hiddenCategories={hiddenCategories}
         selectedCategoryId={selectedCategoryId}
         selectedYear={selectedYear}
         onCategoryChange={handleCategoryChange}

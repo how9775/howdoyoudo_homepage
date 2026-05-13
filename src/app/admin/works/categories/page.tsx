@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Trash2, Check, X, Tag } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Check, X, Tag, EyeOff, Eye } from 'lucide-react';
 
 interface Category {
   id: number;
   display_name: string;
   is_active: boolean;
+  is_hidden_from_public: boolean;
   created_at: string;
   worksCount?: number;
 }
@@ -128,6 +129,30 @@ export default function AdminCategoriesPage() {
     }
   };
 
+  const handleToggleHidden = async (category: Category) => {
+    try {
+      const res = await fetch('/api/admin/categories', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: category.id, isHiddenFromPublic: !category.is_hidden_from_public }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCategories((prev) =>
+          prev.map((c) =>
+            c.id === category.id
+              ? { ...c, is_hidden_from_public: !category.is_hidden_from_public }
+              : c
+          )
+        );
+      } else {
+        alert(data.error || '수정에 실패했습니다.');
+      }
+    } catch {
+      alert('수정 중 오류가 발생했습니다.');
+    }
+  };
+
   const handleDelete = async (category: Category) => {
     if (category.worksCount && category.worksCount > 0) {
       alert(`이 카테고리에 ${category.worksCount}개의 작업이 있어 삭제할 수 없습니다.\n작업을 먼저 다른 카테고리로 옮기거나 삭제해주세요.`);
@@ -242,6 +267,9 @@ export default function AdminCategoriesPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     연결된 작업 수
                   </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    외부 숨김
+                  </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     작업
                   </th>
@@ -298,6 +326,23 @@ export default function AdminCategoriesPage() {
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
                         {category.worksCount ?? 0}개
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <button
+                        onClick={() => handleToggleHidden(category)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                          category.is_hidden_from_public
+                            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                        }`}
+                        title={category.is_hidden_from_public ? '숨김 해제' : '숨김 설정'}
+                      >
+                        {category.is_hidden_from_public ? (
+                          <><EyeOff className="w-3 h-3" /> 숨김</>
+                        ) : (
+                          <><Eye className="w-3 h-3" /> 공개</>
+                        )}
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       {editingId !== category.id && (
