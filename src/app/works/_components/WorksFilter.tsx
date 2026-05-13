@@ -33,7 +33,7 @@ export default function WorksFilter({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* 데스크톱 버전 */}
-        <div className="hidden md:flex flex-row items-center gap-3 w-full">
+        <div className="hidden md:flex flex-row items-center justify-center gap-3 w-full">
           <button
             onClick={() => onCategoryChange(null)}
             className={`${btnBase} ${selectedCategoryId === null && !isSpecialSelected ? btnActive : btnIdle}`}
