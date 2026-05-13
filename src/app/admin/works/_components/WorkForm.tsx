@@ -210,12 +210,26 @@ export default function WorkForm({
   };
 
   const downloadAllExistingImages = async () => {
-    for (let i = 0; i < keepExistingImages.length; i++) {
-      const url = keepExistingImages[i];
-      const ext = url.split('.').pop()?.split('?')[0] || 'jpg';
-      await downloadImage(url, `image_${i + 1}.${ext}`);
-      // 브라우저가 여러 다운로드를 막지 않도록 약간 대기
-      await new Promise((res) => setTimeout(res, 300));
+    try {
+      const response = await fetch('/api/admin/download-zip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls: keepExistingImages, workId }),
+      });
+
+      if (!response.ok) throw new Error();
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = workId
+        ? `howdoyoudo_work_${workId}_image.zip`
+        : 'howdoyoudo_images.zip';
+      a.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      alert('압축 다운로드에 실패했습니다.');
     }
   };
 
