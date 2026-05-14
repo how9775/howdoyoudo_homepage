@@ -126,7 +126,7 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
     <div
       ref={sectionRef}
       className={`relative ${bg} mb-8`}
-      style={{ height: `${cards.length * 100}vh` }}
+      style={{ height: isMobile ? `${cards.length * 100}vh` : `${cards.length * 140}vh` }}
     >
       <div className={`sticky top-0 h-screen w-full overflow-hidden ${bg}`}>
         {isMobile ? (
