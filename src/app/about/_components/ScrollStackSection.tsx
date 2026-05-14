@@ -179,7 +179,7 @@ export default function ScrollStackSection({ cards, bg = 'bg-white' }: ScrollSta
                     </div>
 
                     {/* 컨텐츠 */}
-                    <div className="relative flex-1 overflow-hidden">
+                    <div className="relative flex-1 overflow-hidden flex flex-col justify-center">
                       {/* 배경 워터마크 */}
                       <div
                         className="absolute inset-0 flex items-center justify-center pointer-events-none"
