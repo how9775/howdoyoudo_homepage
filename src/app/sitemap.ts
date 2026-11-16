@@ -1,9 +1,12 @@
 import { MetadataRoute } from 'next';
 import { supabaseAdmin } from '@/utils/supabase';
+import { SITE_URL } from '@/lib/seo';
 
-export const revalidate = 86400; // 24시간마다 재생성 (Vercel ISR)
+// works 등록/수정/삭제 시 revalidatePath('/sitemap.xml')로 즉시 갱신되며,
+// 그 외에는 1시간마다 재생성
+export const revalidate = 3600;
 
-const BASE_URL = 'https://hdyd.co.kr';
+const BASE_URL = SITE_URL;
 
 const staticPages: MetadataRoute.Sitemap = [
   {
@@ -25,6 +28,12 @@ const staticPages: MetadataRoute.Sitemap = [
     priority: 0.9,
   },
   {
+    url: `${BASE_URL}/history`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.6,
+  },
+  {
     url: `${BASE_URL}/contact`,
     lastModified: new Date('2024-12-09'),
     changeFrequency: 'monthly',
@@ -36,9 +45,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const { data: works, error } = await supabaseAdmin
       .from('works')
-      .select('id, updated_at')
+      .select('id, updated_at, thumbnail_image')
       .eq('is_active', true)
-      .order('id', { ascending: true });
+      .order('id', { ascending: false });
 
     if (error || !works) {
       return staticPages;
@@ -49,6 +58,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(work.updated_at),
       changeFrequency: 'weekly',
       priority: 0.7,
+      images: work.thumbnail_image ? [work.thumbnail_image] : undefined,
     }));
 
     return [...staticPages, ...workPages];

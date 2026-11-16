@@ -6,7 +6,6 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /api
-Disallow: /_next/static/
 Disallow: /*.json$
 
 # 구글봇 특별 설정

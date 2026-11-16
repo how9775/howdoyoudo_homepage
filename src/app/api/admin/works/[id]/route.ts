@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
+import { revalidateWorkPages, notifySearchEngines } from '@/lib/seo';
 import { supabaseAdmin } from '@/utils/supabase';
 import { verifyToken } from '@/lib/jwt';
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
@@ -131,6 +132,10 @@ export async function PUT(
 
     if (error) throw error;
 
+    // 수정/비활성화 즉시 반영 + 검색엔진에 변경 알림 (비활성화 시 404로 재수집됨)
+    revalidateWorkPages(workId);
+    after(() => notifySearchEngines([`/works/${workId}`]));
+
     return NextResponse.json({ success: true, message: '작업이 성공적으로 수정되었습니다.', work: updatedWork });
 
   } catch (error) {
@@ -207,6 +212,9 @@ export async function DELETE(
       .eq('id', workId);
 
     if (deleteError) throw deleteError;
+
+    revalidateWorkPages(workId);
+    after(() => notifySearchEngines([`/works/${workId}`]));
 
     return NextResponse.json({
       success: true,

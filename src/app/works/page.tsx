@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { WorksResponse } from '@/types/works';
 import WorksClient from './_components/WorksClient';
 import PageHeader from '@/components/sections/PageHeader';
+import { WORKS_TAG } from '@/lib/seo';
 
 const BASE_URL = 'https://hdyd.co.kr';
 
@@ -42,7 +43,7 @@ async function getInitialData(): Promise<WorksResponse> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const response = await fetch(`${baseUrl}/api/works?page=1&limit=21&excludeHidden=true`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 3600, tags: [WORKS_TAG] },
     });
 
     if (!response.ok) {

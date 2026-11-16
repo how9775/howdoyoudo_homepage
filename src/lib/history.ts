@@ -3,6 +3,8 @@ interface HistoryRow {
   year: string;
   date: string;
   description: string;
+  event_date?: string | null;
+  event_time?: string | null;
 }
 
 export interface YearData {
@@ -30,16 +32,17 @@ export async function getHistoryData(): Promise<YearData[]> {
       return []
     }
 
-    // 연도별로 그룹화
+    // 연도별로 그룹화 (API가 일자/시간 내림차순으로 내려주므로 순서 유지)
     const groupedByYear = data.reduce<Record<string, YearData>>((acc, item) => {
-      
-      if (!acc[item.year]) {
-        acc[item.year] = {
-          year: item.year,
+      const year = item.event_date ? item.event_date.slice(0, 4) : item.year
+
+      if (!acc[year]) {
+        acc[year] = {
+          year,
           events: []
         }
       }
-      acc[item.year].events.push({
+      acc[year].events.push({
         date: item.date,
         description: item.description
       })

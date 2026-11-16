@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
+import { revalidateWorkPages, notifySearchEngines } from '@/lib/seo';
 import { supabaseAdmin } from '@/utils/supabase';
 import { verifyToken } from '@/lib/jwt';
 
@@ -125,6 +126,10 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) throw error;
+
+    // 신규 게시글 즉시 노출: ISR 캐시 무효화 + 검색엔진 색인 요청
+    revalidateWorkPages(data.id);
+    after(() => notifySearchEngines([`/works/${data.id}`, '/works']));
 
     return NextResponse.json({
       success: true,
