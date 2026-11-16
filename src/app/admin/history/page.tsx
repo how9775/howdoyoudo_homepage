@@ -26,6 +26,66 @@ const todayString = () => {
 
 const toTimeInput = (t: string | null) => (t ? t.slice(0, 5) : '');
 
+const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+const MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+
+// ─────────────────────────────────────────────
+// 시간 선택 (24시간제, 오전/오후 혼동 방지)
+// value: "HH:mm" | ""
+// ─────────────────────────────────────────────
+function TimeSelect({
+    value,
+    onChange,
+    size = 'md',
+}: {
+    value: string;
+    onChange: (value: string) => void;
+    size?: 'sm' | 'md';
+}) {
+    const [hour, minute] = value ? value.split(':') : ['', ''];
+    const selectClass = `border border-gray-300 rounded-lg text-sm bg-white tabular-nums ${
+        size === 'sm' ? 'px-1.5 py-1' : 'px-2 py-2'
+    }`;
+
+    return (
+        <div className="flex items-center gap-1">
+            <select
+                value={hour}
+                onChange={(e) => onChange(e.target.value ? `${e.target.value}:${minute || '00'}` : '')}
+                className={selectClass}
+                aria-label="시"
+            >
+                <option value="">--시</option>
+                {HOURS.map((h) => (
+                    <option key={h} value={h}>{h}시</option>
+                ))}
+            </select>
+            <select
+                value={minute}
+                onChange={(e) => onChange(`${hour}:${e.target.value}`)}
+                disabled={!hour}
+                className={`${selectClass} disabled:bg-gray-50 disabled:text-gray-400`}
+                aria-label="분"
+            >
+                {!hour && <option value="">--분</option>}
+                {MINUTES.map((m) => (
+                    <option key={m} value={m}>{m}분</option>
+                ))}
+            </select>
+            {value && (
+                <button
+                    type="button"
+                    onClick={() => onChange('')}
+                    className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded"
+                    title="시간 지우기"
+                >
+                    <X className="w-4 h-4" />
+                </button>
+            )}
+        </div>
+    );
+}
+
 // ─────────────────────────────────────────────
 // 등록 폼
 // ─────────────────────────────────────────────
@@ -71,7 +131,7 @@ function AddHistoryForm({ onCreated }: { onCreated: (item: HistoryRecord) => voi
                 <h2 className="text-sm font-semibold text-gray-900">새 연혁 등록</h2>
                 <span className="text-xs text-gray-400">일자·시간 기준으로 최신순 자동 정렬됩니다</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-[160px_120px_1fr_auto] gap-2 sm:gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-[160px_auto_1fr_auto] gap-2 sm:gap-3">
                 <label className="flex flex-col gap-1">
                     <span className="text-xs text-gray-500">일자 *</span>
                     <input
@@ -82,15 +142,13 @@ function AddHistoryForm({ onCreated }: { onCreated: (item: HistoryRecord) => voi
                         required
                     />
                 </label>
-                <label className="flex flex-col gap-1">
-                    <span className="text-xs text-gray-500">시간 (선택)</span>
-                    <input
-                        type="time"
+                <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500">시간 (선택 · 24시간제)</span>
+                    <TimeSelect
                         value={form.eventTime}
-                        onChange={(e) => setForm({ ...form, eventTime: e.target.value })}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        onChange={(eventTime) => setForm({ ...form, eventTime })}
                     />
-                </label>
+                </div>
                 <label className="flex flex-col gap-1">
                     <span className="text-xs text-gray-500">설명 *</span>
                     <input
@@ -200,7 +258,7 @@ function HistoryRow({
                 isEditing ? 'bg-blue-50' : isHighlighted ? 'bg-amber-50' : 'hover:bg-gray-50'
             }`}
         >
-            <div className="flex items-center gap-3 sm:w-[260px] shrink-0">
+            <div className="flex items-center gap-3 sm:w-[360px] shrink-0">
                 <input
                     type="checkbox"
                     checked={isSelected}
@@ -209,7 +267,7 @@ function HistoryRow({
                     aria-label="선택"
                 />
                 {isEditing ? (
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <input
                             type="date"
                             value={draft.eventDate}
@@ -217,12 +275,10 @@ function HistoryRow({
                             onKeyDown={onKeyDown}
                             className="px-2 py-1 border border-gray-300 rounded text-sm w-[140px]"
                         />
-                        <input
-                            type="time"
+                        <TimeSelect
+                            size="sm"
                             value={draft.eventTime}
-                            onChange={(e) => setDraft({ ...draft, eventTime: e.target.value })}
-                            onKeyDown={onKeyDown}
-                            className="px-2 py-1 border border-gray-300 rounded text-sm w-[100px]"
+                            onChange={(eventTime) => setDraft({ ...draft, eventTime })}
                         />
                     </div>
                 ) : (
@@ -311,6 +367,19 @@ export default function HistoryPage() {
     const [search, setSearch] = useState('');
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [highlightId, setHighlightId] = useState<number | null>(null);
+    const headerRef = useRef<HTMLElement>(null);
+    const [headerHeight, setHeaderHeight] = useState(0);
+
+    // 연도 헤더(sticky)가 상단 헤더 바로 아래에 붙도록 실제 높이 측정
+    useEffect(() => {
+        const el = headerRef.current;
+        if (!el) return;
+        const update = () => setHeaderHeight(el.offsetHeight);
+        update();
+        const ro = new ResizeObserver(update);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [isLoading]);
 
     const fetchHistories = useCallback(async () => {
         try {
@@ -450,7 +519,7 @@ export default function HistoryPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
+            <header ref={headerRef} className="bg-white border-b border-gray-200 sticky top-0 z-20">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-4">
@@ -509,9 +578,9 @@ export default function HistoryPage() {
                     </div>
                 </div>
 
-                {/* 목록 */}
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                    <div className="flex items-center gap-3 px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-xs text-gray-500">
+                {/* 목록 (overflow-hidden 금지: 연도 헤더 sticky가 동작하지 않음) */}
+                <div className="bg-white rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-3 px-4 py-2.5 bg-gray-50 border-b border-gray-200 rounded-t-lg text-xs text-gray-500">
                         <input
                             type="checkbox"
                             checked={isAllSelected}
@@ -533,7 +602,9 @@ export default function HistoryPage() {
                         grouped.map((group) => (
                             <section key={group.year}>
                                 {(activeYear === 'all' || keyword) && (
-                                    <div className="sticky top-[65px] z-10 flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-semibold">
+                                    <div
+                                        style={{ top: headerHeight }}
+                                        className="sticky z-10 flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-semibold">
                                         <CalendarDays className="w-4 h-4" />
                                         {group.year}
                                         <span className="text-xs font-normal text-gray-300">{group.items.length}건</span>
